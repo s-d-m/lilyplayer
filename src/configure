@@ -1,0 +1,68 @@
+#!/bin/bash
+
+function has_qmake()
+{
+    which -a qmake &>/dev/null
+}
+
+function get_moc_binary()
+{
+    echo "\"$(qmake -query QT_INSTALL_BINS)/moc\""
+}
+
+function get_qt_modules()
+{
+    for module in "widgets" "core" "gui" ; do
+	echo "${module}"
+    done
+}
+
+function get_qt_dummy_Makefile()
+{
+    qmake -o /dev/stdout <(echo "QT += $(get_qt_modules)")
+}
+
+function get_qt_defines()
+{
+    local qt_defines="-pipe -fPIC -D_REENTRANT"
+    while read module ; do
+	qt_defines="${qt_defines} -DQT_${module^^}_LIB"
+    done < <(get_qt_modules)
+
+    echo "$qt_defines"
+}
+
+function get_qt_includes()
+{
+    local QT_INSTALL_HEADERS="$(qmake -query "QT_INSTALL_HEADERS")"
+    local QT_HOST_DATA="$(qmake -query "QT_HOST_DATA")"
+    local QMAKE_SPEC="$(qmake -query "QMAKE_SPEC")"
+
+    local qt_includes="-isystem \"${QT_INSTALL_HEADERS}\""
+    while read module ; do
+	qt_includes="${qt_includes} -isystem \"${QT_INSTALL_HEADERS}/Qt${module^}\""
+    done < <(get_qt_modules)
+
+    echo "${qt_includes} -isystem \"${QT_HOST_DATA}/mkspecs/${QMAKE_SPEC}\" -I ./"
+}
+
+function get_qt_libs()
+{
+    get_qt_dummy_Makefile | sed -n 's/^LIBS\s*=\s*\$(SUBLIBS)\s*//p'
+}
+
+function main()
+{
+    if (! has_qmake) ; then
+	echo >&2 "Qmake is necessary"
+	return 1
+    fi
+
+    (
+	echo "MOC         = $(get_moc_binary)"
+	echo "QT_DEFINES  = $(get_qt_defines)"
+	echo "QT_INCLUDES = $(get_qt_includes)"
+	echo "QT_LIBS     = $(get_qt_libs)"
+    )
+}
+main > "Makefile.vars"
