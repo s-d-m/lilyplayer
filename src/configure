@@ -10,6 +10,11 @@ function get_moc_binary()
     echo "\"$(qmake -query QT_INSTALL_BINS)/moc\""
 }
 
+function get_uic_binary()
+{
+    echo "\"$(qmake -query QT_INSTALL_BINS)/uic\""
+}
+
 function get_qt_modules()
 {
     for module in "widgets" "core" "gui" ; do
@@ -19,12 +24,12 @@ function get_qt_modules()
 
 function get_qt_dummy_Makefile()
 {
-    qmake -o /dev/stdout <(echo "QT += $(get_qt_modules)")
+    qmake -o /dev/stdout <(echo "QT += $(get_qt_modules)\CONFIG += c++14")
 }
 
 function get_qt_defines()
 {
-    local qt_defines="-pipe -fPIC -D_REENTRANT"
+    local qt_defines="-D_REENTRANT"
     while read module ; do
 	qt_defines="${qt_defines} -DQT_${module^^}_LIB"
     done < <(get_qt_modules)
@@ -59,6 +64,7 @@ function main()
     fi
 
     (
+	echo "UIC         = $(get_uic_binary)"
 	echo "MOC         = $(get_moc_binary)"
 	echo "QT_DEFINES  = $(get_qt_defines)"
 	echo "QT_INCLUDES = $(get_qt_includes)"

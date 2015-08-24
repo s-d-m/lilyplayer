@@ -3,13 +3,20 @@ include Makefile.vars
 TARGET_DIR := ../bin
 TARGET := ${TARGET_DIR}/lilyplayer-gui
 
-SRC :=  main.cc \
-
-OBJS := ${SRC:.cc=.o}
-
 LIBS += ${QT_LIBS}
 DEFINES += ${QT_DEFINES}
 INCLUDES += ${QT_INCLUDES}
+
+FORMS := mainwindow.ui
+MOC_FILES := ${FORMS:%.ui=moc_%.cc}
+FORMS_HEADERS := ${FORMS:%.ui=ui_%.hh}
+
+SRC :=  main.cc  \
+	mainwindow.cc \
+	${MOC_FILES}
+
+OBJS := ${SRC:.cc=.o}
+
 
 ifeq ($(findstring clang,$(CXX)), clang)
   CXX_WARN_FLAGS ?= -Weverything \
@@ -124,11 +131,19 @@ ${TARGET}: ${OBJS}
 	       -e '/^$$/ d' -e 's/$$/ :/' < $*.d >> $*.P; \
 	   rm -f $*.d
 
+moc_%.cc: %.hh ui_%.hh
+	${MOC} ${QT_DEFINES} ${QT_INCLUDES:-isystem=-I} -o "$@" "$<" && \
+	sed -i '1i // Avoid warnings on generated file\n#pragma GCC diagnostic error "-w"\n' "$@"
+
+ui_%.hh: %.ui
+	${UIC} -o "$@" "$<" && \
+	sed -i '1i // Avoid warnings on generated headers\n#pragma GCC system_header\n' "$@"
+
 scan-build:
 	${SCAN_BUILD} -analyze-headers --use-c++=/usr/bin/clang++ --status-bugs --keep-going  make -B
 
 clean:
-	rm -f ${TARGET} ${OBJS} $(SRC:%.cc=$/%.P)
+	rm -f ${TARGET} ${OBJS} $(SRC:%.cc=$/%.P) ${MOC_FILES} ${FORMS_HEADERS}
 
 .PHONY: all clean
 
