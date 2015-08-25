@@ -124,7 +124,7 @@ ${TARGET}: ${OBJS}
 	-mkdir -p ${TARGET_DIR}
 	${CXX} ${CXXFLAGS} -o ${TARGET} ${OBJS} ${LIBS}
 
-%.o: %.cc
+%.o: %.cc ${FORMS_HEADERS}
 	${CXX} ${CXXFLAGS} ${INCLUDES} -MD -c -o "$@" "$<"
 	 @cp $*.d $*.P; \
 	   sed -e 's/#.*//' -e 's/^[^:]*: *//' -e 's/ *\\$$//' \
@@ -145,6 +145,8 @@ scan-build:
 clean:
 	rm -f ${TARGET} ${OBJS} $(SRC:%.cc=$/%.P) ${MOC_FILES} ${FORMS_HEADERS}
 
-.PHONY: all clean
+.PHONY: all clean scan-build
+
+.SUFFIXES:
 
 -include $(SRC:%.cc=$/%.P)
