@@ -29,7 +29,7 @@ function get_qt_dummy_Makefile()
 
 function get_qt_defines()
 {
-    local qt_defines="-D_REENTRANT"
+    local qt_defines="-DQT_NO_DEBUG -D_REENTRANT"
     while read module ; do
 	qt_defines="${qt_defines} -DQT_${module^^}_LIB"
     done < <(get_qt_modules)
