@@ -143,7 +143,7 @@ scan-build:
 	${SCAN_BUILD} -analyze-headers --use-c++=/usr/bin/clang++ --status-bugs --keep-going  make -B
 
 clean:
-	rm -f ${TARGET} ${OBJS} $(SRC:%.cc=$/%.P) ${MOC_FILES} ${FORMS_HEADERS}
+	rm -f ${TARGET} ${OBJS} $(SRC:%.cc=$/%.P) ${MOC_FILES} ${FORMS_HEADERS} Makefile.vars
 
 .PHONY: all clean scan-build
 
