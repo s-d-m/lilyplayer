@@ -8,7 +8,9 @@
 // }
 
 #pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wzero-as-null-pointer-constant" // Qt is not effective-C++ friendy
+#if !defined(__clang__)
+  #pragma GCC diagnostic ignored "-Wzero-as-null-pointer-constant" // Qt is not effective-C++ friendy
+#endif
 
 MainWindow::MainWindow(QWidget *parent) :
   QMainWindow(parent),

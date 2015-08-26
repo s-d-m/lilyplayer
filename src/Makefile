@@ -133,11 +133,11 @@ ${TARGET}: ${OBJS}
 
 moc_%.cc: %.hh ui_%.hh
 	${MOC} ${QT_DEFINES} ${QT_INCLUDES:-isystem=-I} -o "$@" "$<" && \
-	sed -i '1i // Avoid warnings on generated file\n#pragma GCC diagnostic error "-w"\n' "$@"
+	sed -i '1i // Avoid warnings on generated file\n#if !defined(__clang__)\n  #pragma GCC diagnostic error "-w"\n#endif\n' "$@"
 
 ui_%.hh: %.ui
 	${UIC} -o "$@" "$<" && \
-	sed -i '1i // Avoid warnings on generated headers\n#pragma GCC system_header\n' "$@"
+	sed -i '1i // Avoid warnings on generated headers\n#if !defined(__clang__)\n  #pragma GCC system_header\n#endif\n' "$@"
 
 scan-build:
 	${SCAN_BUILD} -analyze-headers --use-c++=/usr/bin/clang++ --status-bugs --keep-going  make -B
