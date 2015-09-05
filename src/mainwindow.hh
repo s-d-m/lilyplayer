@@ -7,8 +7,12 @@
 #include <QGraphicsView>
 #include <QGraphicsItem>
 
+#include "keyboard.hh"
+
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Weffc++" // Qt is not effective-C++ friendy
+
+
 
 namespace Ui {
   class MainWindow;
@@ -25,6 +29,7 @@ class MainWindow : public QMainWindow
   private:
     Ui::MainWindow *ui;
     QGraphicsScene *scene;
+    struct keys_color keyboard;
 };
 
 #pragma GCC diagnostic pop
