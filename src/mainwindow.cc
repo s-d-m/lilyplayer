@@ -175,7 +175,7 @@ void MainWindow::process_keyboard_event()
 
   draw_keyboard(*(this->scene), this->keyboard);
 
-  current_key = (current_key + 1) % 88;
+  current_key = static_cast<decltype(current_key)>((current_key + 1) % 88);
 }
 
 #pragma GCC diagnostic push
