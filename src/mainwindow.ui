@@ -100,6 +100,7 @@
     <property name="title">
      <string>File</string>
     </property>
+    <addaction name="actionOpen"/>
     <addaction name="actionClose"/>
    </widget>
    <addaction name="menuFile"/>
@@ -116,8 +117,22 @@
    <property name="text">
     <string>Close</string>
    </property>
+   <property name="toolTip">
+    <string>Close application</string>
+   </property>
    <property name="shortcut">
     <string>Ctrl+Q</string>
+   </property>
+  </action>
+  <action name="actionOpen">
+   <property name="text">
+    <string>Open</string>
+   </property>
+   <property name="toolTip">
+    <string>Open a midi file</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+O</string>
    </property>
   </action>
  </widget>
@@ -140,5 +155,23 @@
     </hint>
    </hints>
   </connection>
+
+  <connection>
+   <sender>actionOpen</sender>
+   <signal>triggered()</signal>
+   <receiver>MainWindow</receiver>
+   <slot>open_file()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>508</x>
+     <y>270</y>
+    </hint>
+   </hints>
+  </connection>
+
  </connections>
 </ui>

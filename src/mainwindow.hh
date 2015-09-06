@@ -30,12 +30,14 @@ class MainWindow : public QMainWindow
 
   private slots:
     void process_keyboard_event();
+    void open_file();
 
   private:
     Ui::MainWindow *ui;
     QGraphicsScene *scene;
     struct keys_color keyboard;
     QTimer timer;
+    std::string current_midi_file;
 };
 
 #pragma GCC diagnostic pop
