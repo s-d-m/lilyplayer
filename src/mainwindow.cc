@@ -55,8 +55,8 @@ static void draw_keyboard(QGraphicsScene& scene, const struct keys_color& keyboa
   constexpr qreal pos_x {0};
   constexpr qreal pos_y {0};
 
-  draw_white_key(scene, pos_x + 1, pos_y, keyboard.la_0_color); // la 0
-  draw_white_key(scene, pos_x + 1 + WHITE_KEY_WIDTH, pos_y, keyboard.si_0_color); // si 0
+  draw_white_key(scene, pos_x, pos_y, keyboard.la_0_color); // la 0
+  draw_white_key(scene, pos_x + WHITE_KEY_WIDTH, pos_y, keyboard.si_0_color); // si 0
   draw_black_key(scene, pos_x + (qreal{33} / qreal{2}), pos_y, keyboard.la_diese_0_color); // la# 0
 
   constexpr qreal octave_width { qreal{7} * WHITE_KEY_WIDTH };
