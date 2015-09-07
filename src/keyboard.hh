@@ -2,6 +2,7 @@
 #define KEYBOARD_HH
 
 #include <QColor>
+#include <QGraphicsScene>
 
 
 #define OCTAVE(X) \
@@ -92,5 +93,9 @@ struct keys_color
     struct octave_color octaves[7];
     QColor do_8_color;
 };
+
+void draw_keyboard(QGraphicsScene& scene, const struct keys_color& keyboard);
+void reset_color(struct keys_color& keyboard, enum note_kind note);
+void set_color(struct keys_color& keyboard, enum note_kind note, QColor normal_key_color, QColor diese_key_color);
 
 #endif
