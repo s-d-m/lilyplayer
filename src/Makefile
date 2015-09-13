@@ -14,6 +14,7 @@ FORMS_HEADERS := ${FORMS:%.ui=ui_%.hh}
 SRC :=  main.cc  \
 	mainwindow.cc \
 	keyboard.cc \
+	signals_handler.cc \
 	${MOC_FILES}
 
 OBJS := ${SRC:.cc=.o}
