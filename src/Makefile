@@ -15,6 +15,7 @@ SRC :=  main.cc  \
 	mainwindow.cc \
 	keyboard.cc \
 	signals_handler.cc \
+	midi_reader.cc \
 	${MOC_FILES}
 
 OBJS := ${SRC:.cc=.o}

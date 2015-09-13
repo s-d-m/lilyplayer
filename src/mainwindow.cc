@@ -1,7 +1,7 @@
 #include <signal.h>
 #include <iostream>
 #include <QFileDialog>
-
+#include <QMessageBox>
 
 #include "mainwindow.hh"
 #include "ui_mainwindow.hh"
@@ -75,8 +75,22 @@ void MainWindow::open_file()
     if (files.length() == 1)
     {
       const auto file = files[0];
-      this->current_midi_file = file.toStdString();
-      std::cout << "selected: " << this->current_midi_file << std::endl;
+      const auto filename = file.toStdString();
+
+      try
+      {
+	this->song = get_midi_events(filename);
+	this->song_pos = std::numeric_limits<decltype(this->song_pos)>::max();
+      }
+      catch (std::exception& e)
+      {
+	const auto err_msg = e.what();
+	QMessageBox::critical(this, tr("Failed to open file."),
+			      err_msg,
+			      QMessageBox::Ok,
+			      QMessageBox::Ok);
+      }
+
     }
   }
 }
@@ -92,7 +106,7 @@ MainWindow::MainWindow(QWidget *parent) :
   scene(new QGraphicsScene(this)),
   keyboard(),
   timer(),
-  current_midi_file()
+  song()
 {
   ui->setupUi(this);
   ui->keyboard->setRenderHints(QPainter::Antialiasing | QPainter::SmoothPixmapTransform);

@@ -9,7 +9,10 @@
 
 #include <QTimer>
 
+#include <limits>
+
 #include "keyboard.hh"
+#include "midi_reader.hh"
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Weffc++" // Qt is not effective-C++ friendy
@@ -38,7 +41,8 @@ class MainWindow : public QMainWindow
     QGraphicsScene *scene;
     struct keys_color keyboard;
     QTimer timer;
-    std::string current_midi_file;
+    std::vector<struct midi_event> song;
+    unsigned int song_pos = std::numeric_limits<unsigned int>::max();
     bool is_in_pause = false;
 };
 
