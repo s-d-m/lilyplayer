@@ -198,8 +198,8 @@ group_events_by_time(const std::vector<struct midi_event>& midi_events,
     if (elt == res.end())
     {
       res.emplace_back(ev_time,
-		       std::move(decltype(music_event::midi_messages){m.data}),
-		       std::move(decltype(music_event::key_events){}));
+		       decltype(music_event::midi_messages){m.data},
+		       decltype(music_event::key_events){});
     }
     else
     {
@@ -218,8 +218,8 @@ group_events_by_time(const std::vector<struct midi_event>& midi_events,
     if (elt == res.end())
     {
       res.emplace_back(ev_time,
-		       std::move(decltype(music_event::midi_messages){}),
-		       std::move(decltype(music_event::key_events){k.data}));
+		       decltype(music_event::midi_messages){},
+		       decltype(music_event::key_events){k.data});
     }
     else
     {
