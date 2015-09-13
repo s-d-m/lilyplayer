@@ -37,12 +37,14 @@ class MainWindow : public QMainWindow
     void look_for_signals_change();
 
   private:
+    static constexpr unsigned int INVALID_SONG_POS = std::numeric_limits<unsigned int>::max();
+
     Ui::MainWindow *ui;
     QGraphicsScene *scene;
     struct keys_color keyboard;
-    QTimer timer;
-    std::vector<struct midi_event> song;
-    unsigned int song_pos = std::numeric_limits<unsigned int>::max();
+    QTimer signal_checker_timer;
+    song_t song;
+    unsigned int song_pos = INVALID_SONG_POS;
     bool is_in_pause = false;
 };
 

@@ -4,41 +4,7 @@
 #include <QColor>
 #include <QGraphicsScene>
 
-
-#define OCTAVE(X) \
-  do_##X,	  \
-  do_diese##X,	  \
-  re_##X,	  \
-  re_diese_##X,   \
-  mi_##X,	  \
-  fa_##X,	  \
-  fa_diese_##X,   \
-  sol_##X,	  \
-  sol_diese_##X,  \
-  la_##X,	  \
-  la_diese_##X,	  \
-  si_##X	  \
-
-enum note_kind : uint8_t
-{
-  /* scale 0 */
-  la_0 = 21,
-  la_diese_0,
-  si_0,
-
-  OCTAVE(1),
-  OCTAVE(2),
-  OCTAVE(3),
-  OCTAVE(4),
-  OCTAVE(5),
-  OCTAVE(6),
-  OCTAVE(7),
-
-  /* ninth scale */
-  do_8,
-};
-
-#undef OCTAVE
+#include "utils.hh"
 
 
 struct octave_color

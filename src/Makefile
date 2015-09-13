@@ -16,6 +16,8 @@ SRC :=  main.cc  \
 	keyboard.cc \
 	signals_handler.cc \
 	midi_reader.cc \
+	utils.cc \
+	keyboard_events_extractor.cc \
 	${MOC_FILES}
 
 OBJS := ${SRC:.cc=.o}

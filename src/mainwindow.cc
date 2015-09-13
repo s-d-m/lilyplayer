@@ -41,20 +41,61 @@ void MainWindow::look_for_signals_change()
 
 void MainWindow::process_keyboard_event()
 {
-  if (not is_in_pause)
+  if (song_pos == INVALID_SONG_POS)
   {
-    static uint8_t current_key = 0;
-
-    set_color(this->keyboard, static_cast<enum note_kind>(21 + current_key), Qt::blue, Qt::yellow);
-    // The + 88 is necessary for the case current_key == 0. Just so current_key - 1 doesn't wrap
-    // and the computation remains accurate
-    reset_color(this->keyboard, static_cast<enum note_kind>(21 + ((current_key + 88 - 1) % 88)));
-
-
-    draw_keyboard(*(this->scene), this->keyboard);
-
-    current_key = static_cast<decltype(current_key)>((current_key + 1) % 88);
+    return;
   }
+
+  if (is_in_pause)
+  {
+    QTimer::singleShot(100, this, SLOT(process_keyboard_event()));
+    return;
+  }
+
+  if ((song_pos != 0) and (song_pos >= song.size()))
+  {
+    throw std::runtime_error("Invalid song position found");
+  }
+
+  const auto& key_events = song[song_pos].key_events;
+
+  /* update the keyboard */
+  for (const auto& k_ev : key_events)
+  {
+    switch (k_ev.ev_type)
+    {
+      case key_data::type::pressed:
+	set_color(keyboard, static_cast<enum note_kind>(k_ev.pitch), Qt::blue, Qt::cyan);
+	break;
+
+      case key_data::type::released:
+	reset_color(keyboard, static_cast<enum note_kind>(k_ev.pitch));
+	break;
+
+#if !defined(__clang__)
+// clang complains that all values are handled in the switch and issue
+// a warning for the default case
+// gcc complains about a missing default
+      default:
+	  break;
+#endif
+    }
+  }
+
+  draw_keyboard(*(this->scene), this->keyboard);
+
+  if (song_pos + 1 == song.size())
+  {
+    // song is finished
+    song_pos = INVALID_SONG_POS;
+  }
+  else
+  {
+    // call this function back for the next event
+    song_pos++;
+    QTimer::singleShot( static_cast<int>((song[song_pos].time - song[song_pos - 1].time) / 1'000'000), this, SLOT(process_keyboard_event()) );
+  }
+
 }
 
 void MainWindow::open_file()
@@ -79,8 +120,11 @@ void MainWindow::open_file()
 
       try
       {
-	this->song = get_midi_events(filename);
-	this->song_pos = std::numeric_limits<decltype(this->song_pos)>::max();
+	const auto midi_events = get_midi_events(filename);
+	const auto keyboard_events = get_key_events(midi_events);
+	this->song = group_events_by_time(midi_events, keyboard_events);
+	this->song_pos = 0;
+	process_keyboard_event();
       }
       catch (std::exception& e)
       {
@@ -105,7 +149,7 @@ MainWindow::MainWindow(QWidget *parent) :
   ui(new Ui::MainWindow),
   scene(new QGraphicsScene(this)),
   keyboard(),
-  timer(),
+  signal_checker_timer(),
   song()
 {
   ui->setupUi(this);
@@ -113,9 +157,8 @@ MainWindow::MainWindow(QWidget *parent) :
   ui->keyboard->setScene(scene);
   draw_keyboard(*scene, this->keyboard);
 
-  connect(&timer, SIGNAL(timeout()), this, SLOT(process_keyboard_event()));
-  connect(&timer, SIGNAL(timeout()), this, SLOT(look_for_signals_change()));
-  timer.start(1000 /* ms */);
+  connect(&signal_checker_timer, SIGNAL(timeout()), this, SLOT(look_for_signals_change()));
+  signal_checker_timer.start(100 /* ms */);
 }
 
 #pragma GCC diagnostic pop
