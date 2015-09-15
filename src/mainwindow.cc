@@ -39,7 +39,14 @@ void MainWindow::look_for_signals_change()
 
 }
 
-void MainWindow::process_keyboard_event()
+void MainWindow::process_keyboard_event(const music_event& keys_event)
+{
+  update_keyboard(keys_event, this->keyboard);
+  draw_keyboard(*(this->scene), this->keyboard);
+
+}
+
+void MainWindow::song_event_loop()
 {
   if (song_pos == INVALID_SONG_POS)
   {
@@ -48,7 +55,7 @@ void MainWindow::process_keyboard_event()
 
   if (is_in_pause)
   {
-    QTimer::singleShot(100, this, SLOT(process_keyboard_event()));
+    QTimer::singleShot(100, this, SLOT(song_event_loop()));
     return;
   }
 
@@ -57,32 +64,7 @@ void MainWindow::process_keyboard_event()
     throw std::runtime_error("Invalid song position found");
   }
 
-  const auto& key_events = song[song_pos].key_events;
-
-  /* update the keyboard */
-  for (const auto& k_ev : key_events)
-  {
-    switch (k_ev.ev_type)
-    {
-      case key_data::type::pressed:
-	set_color(keyboard, static_cast<enum note_kind>(k_ev.pitch), Qt::blue, Qt::cyan);
-	break;
-
-      case key_data::type::released:
-	reset_color(keyboard, static_cast<enum note_kind>(k_ev.pitch));
-	break;
-
-#if !defined(__clang__)
-// clang complains that all values are handled in the switch and issue
-// a warning for the default case
-// gcc complains about a missing default
-      default:
-	  break;
-#endif
-    }
-  }
-
-  draw_keyboard(*(this->scene), this->keyboard);
+  process_keyboard_event( song[song_pos] );
 
   if (song_pos + 1 == song.size())
   {
@@ -93,9 +75,31 @@ void MainWindow::process_keyboard_event()
   {
     // call this function back for the next event
     song_pos++;
-    QTimer::singleShot( static_cast<int>((song[song_pos].time - song[song_pos - 1].time) / 1'000'000), this, SLOT(process_keyboard_event()) );
+    QTimer::singleShot( static_cast<int>((song[song_pos].time - song[song_pos - 1].time) / 1'000'000), this, SLOT(song_event_loop()) );
   }
 
+}
+
+void MainWindow::stop_song()
+{
+  // for each key, create a release key event. No matter if the key was actually
+  // pressed or not
+  music_event all_keys_up;
+  constexpr auto nb_keys = note_kind::do_8 - note_kind::la_0 + 1;
+  all_keys_up.key_events.reserve(nb_keys);
+  all_keys_up.midi_messages.reserve(nb_keys);
+
+  for (auto key = static_cast<uint8_t>(note_kind::la_0);
+       key <= static_cast<uint8_t>(note_kind::do_8);
+       ++key)
+  {
+    all_keys_up.key_events.push_back(key_data{ .pitch = key,
+					        .ev_type = key_data::type::released });
+    all_keys_up.midi_messages.push_back(
+      std::vector<uint8_t>{ 0x80, key, 0x00 } );
+  }
+
+  process_keyboard_event(all_keys_up);
 }
 
 void MainWindow::open_file()
@@ -120,11 +124,12 @@ void MainWindow::open_file()
 
       try
       {
+	stop_song();
 	const auto midi_events = get_midi_events(filename);
 	const auto keyboard_events = get_key_events(midi_events);
 	this->song = group_events_by_time(midi_events, keyboard_events);
 	this->song_pos = 0;
-	process_keyboard_event();
+	song_event_loop();
       }
       catch (std::exception& e)
       {

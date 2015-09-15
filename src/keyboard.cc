@@ -162,3 +162,31 @@ void reset_color(struct keys_color& keyboard, enum note_kind note)
 {
   set_color(keyboard, note, Qt::white, Qt::black);
 }
+
+
+void update_keyboard(const music_event& music_ev, struct keys_color& keyboard)
+{
+
+  /* update the keyboard */
+  for (const auto& k_ev : music_ev.key_events)
+  {
+    switch (k_ev.ev_type)
+    {
+      case key_data::type::pressed:
+	set_color(keyboard, static_cast<enum note_kind>(k_ev.pitch), Qt::blue, Qt::cyan);
+	break;
+
+      case key_data::type::released:
+	reset_color(keyboard, static_cast<enum note_kind>(k_ev.pitch));
+	break;
+
+#if !defined(__clang__)
+// clang complains that all values are handled in the switch and issue
+// a warning for the default case
+// gcc complains about a missing default
+      default:
+	  break;
+#endif
+    }
+  }
+}

@@ -31,8 +31,12 @@ class MainWindow : public QMainWindow
     explicit MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
 
+  private:
+    void stop_song();
+    void process_keyboard_event(const music_event& keys_event);
+
   private slots:
-    void process_keyboard_event();
+    void song_event_loop();
     void open_file();
     void look_for_signals_change();
 
