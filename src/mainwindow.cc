@@ -177,7 +177,16 @@ MainWindow::MainWindow(QWidget *parent) :
   connect(&signal_checker_timer, SIGNAL(timeout()), this, SLOT(look_for_signals_change()));
   signal_checker_timer.start(100 /* ms */);
 
-  sound_player.openPort(1);
+  const auto nb_ports = sound_player.getPortCount();
+  if (nb_ports == 0)
+  {
+    std::cerr << "Sorry: no output midi port found\n";
+  }
+  else
+  {
+    const unsigned int port_to_use = (nb_ports == 1) ? 0 : 1;
+    sound_player.openPort( port_to_use );
+  }
 }
 
 #pragma GCC diagnostic pop
