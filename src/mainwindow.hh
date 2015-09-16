@@ -11,6 +11,11 @@
 
 #include <limits>
 
+
+extern "C" {
+#include <RtMidi.h>
+}
+
 #include "keyboard.hh"
 #include "midi_reader.hh"
 
@@ -48,6 +53,7 @@ class MainWindow : public QMainWindow
     struct keys_color keyboard;
     QTimer signal_checker_timer;
     song_t song;
+    RtMidiOut sound_player;
     unsigned int song_pos = INVALID_SONG_POS;
     bool is_in_pause = false;
 };

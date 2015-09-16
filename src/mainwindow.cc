@@ -6,7 +6,6 @@
 #include "mainwindow.hh"
 #include "ui_mainwindow.hh"
 
-
 // Global variables to "share" state between the signal handler and
 // the main event loop.  Only these two pieces should be allowed to
 // use these global variables.  To avoid any other piece piece of code
@@ -44,6 +43,18 @@ void MainWindow::process_keyboard_event(const music_event& keys_event)
   update_keyboard(keys_event, this->keyboard);
   draw_keyboard(*(this->scene), this->keyboard);
 
+  for (const auto& message : keys_event.midi_messages)
+  {
+    auto tmp = message; // can't use message directly since message is const and
+			// sendMessage doesn't take a const vector
+    sound_player.sendMessage(&tmp);
+
+    // could use the following to cast the const away: but since there is no
+    // guarantee that the libRtMidi doesn't modify the data ... (I know the I
+    // can read the code)
+    //
+    //sound_player.sendMessage(const_cast<midi_message*>(&message));
+  }
 }
 
 void MainWindow::song_event_loop()
@@ -155,7 +166,8 @@ MainWindow::MainWindow(QWidget *parent) :
   scene(new QGraphicsScene(this)),
   keyboard(),
   signal_checker_timer(),
-  song()
+  song(),
+  sound_player(RtMidi::LINUX_ALSA)
 {
   ui->setupUi(this);
   ui->keyboard->setRenderHints(QPainter::Antialiasing | QPainter::SmoothPixmapTransform);
@@ -164,6 +176,8 @@ MainWindow::MainWindow(QWidget *parent) :
 
   connect(&signal_checker_timer, SIGNAL(timeout()), this, SLOT(look_for_signals_change()));
   signal_checker_timer.start(100 /* ms */);
+
+  sound_player.openPort(1);
 }
 
 #pragma GCC diagnostic pop
@@ -171,4 +185,5 @@ MainWindow::MainWindow(QWidget *parent) :
 MainWindow::~MainWindow()
 {
   delete ui;
+  sound_player.closePort();
 }
