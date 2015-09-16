@@ -11,10 +11,7 @@
 
 #include <limits>
 
-
-extern "C" {
 #include <RtMidi.h>
-}
 
 #include "keyboard.hh"
 #include "midi_reader.hh"
