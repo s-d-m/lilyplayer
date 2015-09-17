@@ -155,6 +155,35 @@ void MainWindow::open_file()
   }
 }
 
+void MainWindow::output_port_change()
+{
+  // find out which output port is now checked.
+  auto menu_bar = this->menuBar();
+  if (menu_bar == nullptr)
+  {
+    std::cerr << "Error: couldn't find the menu bar\n";
+    return;
+  }
+
+  auto menu_output_port = menu_bar->findChild<QMenu*>("menuOutput_port",
+						      Qt::FindDirectChildrenOnly);
+  if (menu_output_port == nullptr)
+  {
+    std::cerr << "Error: couldn't find the output ports menu\n";
+    return;
+  }
+
+  auto button_list = menu_output_port->findChildren<QAction*>(QString(), Qt::FindDirectChildrenOnly);
+  for (auto& button : button_list)
+  {
+    if (button->isChecked())
+    {
+      const auto text = button->text().toStdString();
+      std::cout << text << " checked\n";
+    }
+  }
+}
+
 #pragma GCC diagnostic push
 #if !defined(__clang__)
   #pragma GCC diagnostic ignored "-Wzero-as-null-pointer-constant" // Qt is not effective-C++ friendy
@@ -206,6 +235,7 @@ MainWindow::MainWindow(QWidget *parent) :
 	button->setCheckable(true);
 	button->setChecked( i == port_to_use );
 	button->setActionGroup( output_ports_group );
+	connect(button, SIGNAL(triggered()), this, SLOT(output_port_change()));
       }
     }
 

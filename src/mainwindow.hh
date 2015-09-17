@@ -41,6 +41,7 @@ class MainWindow : public QMainWindow
     void song_event_loop();
     void open_file();
     void look_for_signals_change();
+    void output_port_change();
 
   private:
     static constexpr unsigned int INVALID_SONG_POS = std::numeric_limits<unsigned int>::max();
