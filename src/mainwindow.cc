@@ -196,12 +196,16 @@ MainWindow::MainWindow(QWidget *parent) :
     }
     else
     {
+      auto output_ports_group = new QActionGroup (menu_output_port);
+      output_ports_group->setExclusive(true);
+
       for (unsigned int i = 0; i < nb_ports; ++i)
       {
 	const auto label = QString::fromStdString( sound_player.getPortName(i) );
 	auto button = menu_output_port->addAction(label);
 	button->setCheckable(true);
 	button->setChecked( i == port_to_use );
+	button->setActionGroup( output_ports_group );
       }
     }
 
