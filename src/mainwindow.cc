@@ -186,6 +186,25 @@ MainWindow::MainWindow(QWidget *parent) :
   {
     const unsigned int port_to_use = (nb_ports == 1) ? 0 : 1;
     sound_player.openPort( port_to_use );
+
+    auto menu_bar = this->menuBar();
+    auto menu_output_port = menu_bar->findChild<QMenu*>("menuOutput_port",
+							Qt::FindDirectChildrenOnly);
+    if (menu_output_port == nullptr)
+    {
+      std::cerr << "Error: couldn't find the output port menu\n";
+    }
+    else
+    {
+      for (unsigned int i = 0; i < nb_ports; ++i)
+      {
+	const auto label = QString::fromStdString( sound_player.getPortName(i) );
+	auto button = menu_output_port->addAction(label);
+	button->setCheckable(true);
+	button->setChecked( i == port_to_use );
+      }
+    }
+
   }
 }
 

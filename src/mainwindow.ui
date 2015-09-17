@@ -103,7 +103,13 @@
     <addaction name="actionOpen"/>
     <addaction name="actionClose"/>
    </widget>
+   <widget class="QMenu" name="menuOutput_port">
+    <property name="title">
+     <string>output port</string>
+    </property>
+   </widget>
    <addaction name="menuFile"/>
+   <addaction name="menuOutput_port"/>
   </widget>
   <widget class="QToolBar" name="mainToolBar">
    <attribute name="toolBarArea">
@@ -155,7 +161,6 @@
     </hint>
    </hints>
   </connection>
-
   <connection>
    <sender>actionOpen</sender>
    <signal>triggered()</signal>
@@ -172,6 +177,5 @@
     </hint>
    </hints>
   </connection>
-
  </connections>
 </ui>
