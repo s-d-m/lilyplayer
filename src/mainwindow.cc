@@ -179,6 +179,16 @@ void MainWindow::output_port_change()
     if (button->isChecked())
     {
       this->selected_output_port = button->text().toStdString();
+      const auto nb_ports = sound_player.getPortCount();
+      for (unsigned int i = 0; i < nb_ports; ++i)
+      {
+	const auto port_name = sound_player.getPortName(i);
+	if (port_name == selected_output_port)
+	{
+	  sound_player.closePort();
+	  sound_player.openPort(i);
+	}
+      }
     }
   }
 }
