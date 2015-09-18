@@ -178,9 +178,64 @@ void MainWindow::output_port_change()
   {
     if (button->isChecked())
     {
-      const auto text = button->text().toStdString();
-      std::cout << text << " checked\n";
+      this->selected_output_port = button->text().toStdString();
     }
+  }
+}
+
+void MainWindow::update_output_ports()
+{
+  // find out which output port is now checked.
+  auto menu_bar = this->menuBar();
+  if (menu_bar == nullptr)
+  {
+    std::cerr << "Error: couldn't find the menu bar\n";
+    return;
+  }
+
+  auto menu_output_port = menu_bar->findChild<QMenu*>("menuOutput_port",
+						      Qt::FindDirectChildrenOnly);
+  if (menu_output_port == nullptr)
+  {
+    std::cerr << "Error: couldn't find the output ports menu\n";
+    return;
+  }
+
+  // remove all the children!
+  menu_output_port->clear();
+
+  // find the action group.
+  auto action_group = menu_output_port->findChild<QActionGroup*>("",
+								 Qt::FindDirectChildrenOnly);
+  if (action_group == nullptr)
+  {
+    action_group = new QActionGroup( menu_output_port );
+  }
+
+  const auto nb_ports = sound_player.getPortCount();
+  if (nb_ports == 0)
+  {
+    std::cerr << "Sorry: can't populate menu, no output midi port found\n";
+  }
+  else
+  {
+    for (unsigned int i = 0; i < nb_ports; ++i)
+    {
+      const auto label_as_std_string = sound_player.getPortName(i);
+      const auto label = QString::fromStdString( label_as_std_string );
+      auto button = menu_output_port->addAction(label);
+      button->setCheckable(true);
+      const auto select_this_port = ( label_as_std_string == selected_output_port );
+      button->setChecked( select_this_port );
+      if (select_this_port)
+      {
+	this->selected_output_port = label_as_std_string;
+      }
+
+      button->setActionGroup( action_group );
+      connect(button, SIGNAL(triggered()), this, SLOT(output_port_change()));
+    }
+
   }
 }
 
@@ -215,7 +270,7 @@ MainWindow::MainWindow(QWidget *parent) :
   {
     const unsigned int port_to_use = (nb_ports == 1) ? 0 : 1;
     sound_player.openPort( port_to_use );
-
+    this->selected_output_port = sound_player.getPortName( port_to_use );
     auto menu_bar = this->menuBar();
     auto menu_output_port = menu_bar->findChild<QMenu*>("menuOutput_port",
 							Qt::FindDirectChildrenOnly);
@@ -225,18 +280,7 @@ MainWindow::MainWindow(QWidget *parent) :
     }
     else
     {
-      auto output_ports_group = new QActionGroup (menu_output_port);
-      output_ports_group->setExclusive(true);
-
-      for (unsigned int i = 0; i < nb_ports; ++i)
-      {
-	const auto label = QString::fromStdString( sound_player.getPortName(i) );
-	auto button = menu_output_port->addAction(label);
-	button->setCheckable(true);
-	button->setChecked( i == port_to_use );
-	button->setActionGroup( output_ports_group );
-	connect(button, SIGNAL(triggered()), this, SLOT(output_port_change()));
-      }
+      connect(menu_output_port, SIGNAL(aboutToShow()), this, SLOT(update_output_ports()));
     }
 
   }

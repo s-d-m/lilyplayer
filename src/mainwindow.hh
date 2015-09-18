@@ -42,6 +42,7 @@ class MainWindow : public QMainWindow
     void open_file();
     void look_for_signals_change();
     void output_port_change();
+    void update_output_ports();
 
   private:
     static constexpr unsigned int INVALID_SONG_POS = std::numeric_limits<unsigned int>::max();
@@ -52,6 +53,7 @@ class MainWindow : public QMainWindow
     QTimer signal_checker_timer;
     song_t song;
     RtMidiOut sound_player;
+    std::string selected_output_port = "";
     unsigned int song_pos = INVALID_SONG_POS;
     bool is_in_pause = false;
 };
