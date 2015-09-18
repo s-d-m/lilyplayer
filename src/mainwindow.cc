@@ -231,15 +231,15 @@ void MainWindow::update_output_ports()
   {
     for (unsigned int i = 0; i < nb_ports; ++i)
     {
-      const auto label_as_std_string = sound_player.getPortName(i);
-      const auto label = QString::fromStdString( label_as_std_string );
+      const auto port_name = sound_player.getPortName(i);
+      const auto label = QString::fromStdString( port_name );
       auto button = menu_output_port->addAction(label);
       button->setCheckable(true);
-      const auto select_this_port = ( label_as_std_string == selected_output_port );
+      const auto select_this_port = ( port_name == selected_output_port );
       button->setChecked( select_this_port );
       if (select_this_port)
       {
-	this->selected_output_port = label_as_std_string;
+	this->selected_output_port = port_name;
       }
 
       button->setActionGroup( action_group );
