@@ -36,6 +36,7 @@ class MainWindow : public QMainWindow
   private:
     void stop_song();
     void process_keyboard_event(const music_event& keys_event);
+    void keyPressEvent(QKeyEvent * event);
 
   private slots:
     void song_event_loop();

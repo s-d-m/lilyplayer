@@ -2,7 +2,7 @@
 #include <iostream>
 #include <QFileDialog>
 #include <QMessageBox>
-
+#include <QKeyEvent>
 #include "mainwindow.hh"
 #include "ui_mainwindow.hh"
 
@@ -36,6 +36,19 @@ void MainWindow::look_for_signals_change()
     is_in_pause = false;
   }
 
+}
+
+void MainWindow::keyPressEvent(QKeyEvent* event)
+{
+  const auto pressed_key = event->key();
+
+  if ((pressed_key == Qt::Key_Space) or
+      (pressed_key == Qt::Key_P) or
+      (pressed_key == Qt::Key_Pause))
+  {
+    // toggle play pause
+    is_in_pause = not is_in_pause;
+  }
 }
 
 void MainWindow::process_keyboard_event(const music_event& keys_event)
