@@ -13,6 +13,50 @@ INCLUDES += ${QT_INCLUDES}
 FORMS := mainwindow.ui
 MOC_FILES := ${FORMS:%.ui=moc_%.cc}
 FORMS_HEADERS := ${FORMS:%.ui=ui_%.hh}
+RC_FILE := ../qdarkstyle/style.qrc
+QT_STYLE_FILES := ../qdarkstyle/rc/Vsepartoolbar.png \
+		../qdarkstyle/rc/close-pressed.png \
+		../qdarkstyle/rc/Hmovetoolbar.png \
+		../qdarkstyle/rc/up_arrow.png \
+		../qdarkstyle/rc/left_arrow_disabled.png \
+		../qdarkstyle/rc/close-hover.png \
+		../qdarkstyle/rc/checkbox_unchecked.png \
+		../qdarkstyle/rc/radio_unchecked_disabled.png \
+		../qdarkstyle/rc/radio_checked.png \
+		../qdarkstyle/rc/checkbox_checked_disabled.png \
+		../qdarkstyle/rc/Hsepartoolbar.png \
+		../qdarkstyle/rc/sizegrip.png \
+		../qdarkstyle/rc/down_arrow.png \
+		../qdarkstyle/rc/stylesheet-branch-more.png \
+		../qdarkstyle/rc/radio_unchecked.png \
+		../qdarkstyle/rc/branch_closed-on.png \
+		../qdarkstyle/rc/checkbox_unchecked_disabled.png \
+		../qdarkstyle/rc/branch_open.png \
+		../qdarkstyle/rc/left_arrow.png \
+		../qdarkstyle/rc/stylesheet-branch-end.png \
+		../qdarkstyle/rc/undock.png \
+		../qdarkstyle/rc/right_arrow.png \
+		../qdarkstyle/rc/checkbox_indeterminate.png \
+		../qdarkstyle/rc/checkbox_checked_focus.png \
+		../qdarkstyle/rc/stylesheet-vline.png \
+		../qdarkstyle/rc/radio_checked_focus.png \
+		../qdarkstyle/rc/branch_closed.png \
+		../qdarkstyle/rc/right_arrow_disabled.png \
+		../qdarkstyle/rc/down_arrow_disabled.png \
+		../qdarkstyle/rc/branch_open-on.png \
+		../qdarkstyle/rc/radio_unchecked_focus.png \
+		../qdarkstyle/rc/Vmovetoolbar.png \
+		../qdarkstyle/rc/transparent.png \
+		../qdarkstyle/rc/close.png \
+		../qdarkstyle/rc/radio_checked_disabled.png \
+		../qdarkstyle/rc/checkbox_checked.png \
+		../qdarkstyle/rc/up_arrow_disabled.png \
+		../qdarkstyle/rc/checkbox_indeterminate_focus.png \
+		../qdarkstyle/rc/checkbox_unchecked_focus.png \
+		../qdarkstyle/style.qss \
+		${RC_FILE}
+
+RESOURCE_CODE := resources.cc
 
 SRC :=  main.cc  \
 	mainwindow.cc \
@@ -21,7 +65,8 @@ SRC :=  main.cc  \
 	midi_reader.cc \
 	utils.cc \
 	keyboard_events_extractor.cc \
-	${MOC_FILES}
+	${MOC_FILES} \
+	${RESOURCE_CODE}
 
 OBJS := ${SRC:.cc=.o}
 
@@ -132,6 +177,9 @@ ${TARGET}: ${OBJS}
 	-mkdir -p ${TARGET_DIR}
 	${CXX} ${CXXFLAGS} -o ${TARGET} ${OBJS} ${LIBS}
 
+${RESOURCE_CODE}: ${QT_STYLE_FILES}
+	cd ../qdarkstyle && ${RCC} -o ../src/"$@" ${RC_FILE}
+
 %.o: %.cc ${FORMS_HEADERS}
 	${CXX} ${CXXFLAGS} ${INCLUDES} -MD -c -o "$@" "$<"
 	 @cp $*.d $*.P; \
@@ -151,7 +199,7 @@ scan-build:
 	${SCAN_BUILD} -analyze-headers --use-c++=/usr/bin/clang++ --status-bugs --keep-going  make -B
 
 clean:
-	rm -f ${TARGET} ${OBJS} $(SRC:%.cc=$/%.P) ${MOC_FILES} ${FORMS_HEADERS} Makefile.vars
+	rm -f ${TARGET} ${OBJS} $(SRC:%.cc=$/%.P) ${MOC_FILES} ${FORMS_HEADERS} Makefile.vars ${RESOURCE_CODE}
 
 .PHONY: all clean scan-build
 

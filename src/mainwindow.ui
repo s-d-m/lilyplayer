@@ -16,6 +16,8 @@
   <property name="windowTitle">
    <string>MainWindow</string>
   </property>
+  <property name="styleSheet">
+  </property>
   <widget class="QWidget" name="centralWidget">
    <property name="autoFillBackground">
     <bool>true</bool>

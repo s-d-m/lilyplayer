@@ -5,6 +5,11 @@ function has_qmake()
     which -a qmake &>/dev/null
 }
 
+function get_rcc_binary()
+{
+    echo "\"$(qmake -query QT_INSTALL_BINS)/rcc\""
+}
+
 function get_moc_binary()
 {
     echo "\"$(qmake -query QT_INSTALL_BINS)/moc\""
@@ -64,6 +69,7 @@ function main()
     fi
 
     (
+	echo "RCC         = $(get_rcc_binary)"
 	echo "UIC         = $(get_uic_binary)"
 	echo "MOC         = $(get_moc_binary)"
 	echo "QT_DEFINES  = $(get_qt_defines)"
