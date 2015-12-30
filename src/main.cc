@@ -3,7 +3,7 @@
 #include "signals_handler.hh"
 #include "mainwindow.hh"
 
-static const char* stylesheet =
+static const char* const stylesheet =
   #include "../qdarkstyle/style.qss"
   ;
 
@@ -12,7 +12,7 @@ static void usage(const char* const prog_name, std::ostream& out_stream = std::c
   out_stream << "Usage: " << prog_name << " [midi_file]\n";
 }
 
-int main(int argc, const char* const * const argv)
+int main(const int argc, const char* const * const argv)
 {
   if (argc > 2)
   {
