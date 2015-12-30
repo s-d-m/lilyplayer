@@ -172,6 +172,15 @@ void MainWindow::open_file()
   }
 }
 
+void MainWindow::set_output_port(const unsigned int i)
+{
+  sound_player.closePort();
+  sound_player.openPort(i);
+  const auto port_name = sound_player.getPortName(i);
+  this->selected_output_port = port_name;
+  this->update_output_ports();
+}
+
 void MainWindow::output_port_change()
 {
   // find out which output port is now checked.

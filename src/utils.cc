@@ -2,6 +2,7 @@
 #include <stdexcept>
 #include <string>
 #include <cstddef> // for std::size_t
+#include <RtMidi.h>
 #include "utils.hh"
 
 bool is_key_down_event(const std::vector<uint8_t>& data)
@@ -321,4 +322,86 @@ group_events_by_time(const std::vector<struct midi_event>& midi_events,
   fix_midi_order(res);
 
   return res;
+}
+
+
+
+
+
+template <typename T>
+static
+void list_midi_ports(std::ostream& out, T& player, const char* direction)
+{
+
+  const auto nb_ports = player.getPortCount();
+  if (nb_ports == 0)
+  {
+    out << "Sorry: no " << direction << " midi port found\n";
+  }
+  else
+  {
+    if (nb_ports == 1)
+    {
+      out << "1 " << direction << " port found:\n";
+    }
+    else
+    {
+      out << nb_ports << " " << direction << " ports found:\n";
+    }
+
+    for (auto i = decltype(nb_ports){0}; i < nb_ports; ++i)
+    {
+      out << "  " << i << " -> " << player.getPortName(i) << "\n";
+    }
+  }
+
+}
+
+void list_midi_ports(std::ostream& out)
+{
+  RtMidiOut out_player;
+  list_midi_ports(out, out_player, "output");
+
+  out << "\n";
+
+  RtMidiIn in_player;
+  list_midi_ports(out, in_player, "input");
+
+}
+
+static unsigned int get_nb_output_ports()
+{
+  RtMidiOut player;
+  return player.getPortCount();
+}
+
+unsigned int get_port(const std::string& s)
+{
+  const auto nb_outputs = get_nb_output_ports();
+
+  try
+  {
+    const auto res = std::stoi(s);
+    if ((res < 0) or (static_cast<unsigned int>(res) >= nb_outputs))
+    {
+      std::cerr << "Warning: invalid port\n";
+      return 0;
+    }
+    return static_cast<unsigned int>(res);
+  }
+  catch (std::invalid_argument&)
+  {
+    // argument is not a number, let's see if it matches the name of one of the output
+    for (auto i = decltype(nb_outputs){0}; i < nb_outputs; ++i)
+    {
+      RtMidiOut player;
+      if (s == player.getPortName(i))
+      {
+	return i;
+      }
+    }
+
+    std::cerr << "Warning: invalid port\n";
+    return 0;
+  }
 }
