@@ -32,6 +32,7 @@ class MainWindow : public QMainWindow
   public:
     explicit MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
+    void open_file(const std::string& filename);
 
   private:
     void stop_song();
@@ -40,7 +41,7 @@ class MainWindow : public QMainWindow
 
   private slots:
     void song_event_loop();
-    void open_file();
+    void open_file(); // open the window dialog to select a file
     void look_for_signals_change();
     void output_port_change();
     void update_output_ports();

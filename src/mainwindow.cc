@@ -126,6 +126,27 @@ void MainWindow::stop_song()
   process_keyboard_event(all_keys_up);
 }
 
+void MainWindow::open_file(const std::string& filename)
+{
+  try
+  {
+    stop_song();
+    const auto midi_events = get_midi_events(filename);
+    const auto keyboard_events = get_key_events(midi_events);
+    this->song = group_events_by_time(midi_events, keyboard_events);
+    this->song_pos = 0;
+    song_event_loop();
+  }
+  catch (std::exception& e)
+  {
+    const auto err_msg = e.what();
+    QMessageBox::critical(this, tr("Failed to open file."),
+			  err_msg,
+			  QMessageBox::Ok,
+			  QMessageBox::Ok);
+  }
+}
+
 void MainWindow::open_file()
 {
   QStringList filters;
@@ -146,24 +167,7 @@ void MainWindow::open_file()
       const auto file = files[0];
       const auto filename = file.toStdString();
 
-      try
-      {
-	stop_song();
-	const auto midi_events = get_midi_events(filename);
-	const auto keyboard_events = get_key_events(midi_events);
-	this->song = group_events_by_time(midi_events, keyboard_events);
-	this->song_pos = 0;
-	song_event_loop();
-      }
-      catch (std::exception& e)
-      {
-	const auto err_msg = e.what();
-	QMessageBox::critical(this, tr("Failed to open file."),
-			      err_msg,
-			      QMessageBox::Ok,
-			      QMessageBox::Ok);
-      }
-
+      open_file(filename);
     }
   }
 }
