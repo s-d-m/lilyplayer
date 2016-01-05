@@ -273,6 +273,31 @@ void MainWindow::update_output_ports()
 
 void MainWindow::input_change()
 {
+  // find out which menu item has been clicked.
+  const auto menu_bar = this->menuBar();
+  if (menu_bar == nullptr)
+  {
+    std::cerr << "Error: couldn't find the menu bar\n";
+    return;
+  }
+
+  const auto menu_input = menu_bar->findChild<QMenu*>("menuInput",
+						      Qt::FindDirectChildrenOnly);
+  if (menu_input == nullptr)
+  {
+    std::cerr << "Error: couldn't find the output ports menu\n";
+    return;
+  }
+
+  const auto button_list = menu_input->findChildren<QAction*>(QString(), Qt::FindDirectChildrenOnly);
+  for (const auto& button : button_list)
+  {
+    if (button->isChecked())
+    {
+      this->stop_song();
+      this->selected_input = button->text().toStdString();
+    }
+  }
 }
 
 
