@@ -297,16 +297,26 @@ MainWindow::MainWindow(QWidget *parent) :
   connect(&signal_checker_timer, SIGNAL(timeout()), this, SLOT(look_for_signals_change()));
   signal_checker_timer.start(100 /* ms */);
 
-  const auto nb_ports = sound_player.getPortCount();
-  if (nb_ports == 0)
   {
-    std::cerr << "Sorry: no output midi port found\n";
+    // automatically open an output midi port if possible
+    const auto nb_ports = sound_player.getPortCount();
+    if (nb_ports == 0)
+    {
+      std::cerr << "Sorry: no output midi port found\n";
+    }
+    else
+    {
+      // automatically open an output midi port.
+      const unsigned int port_to_use = (nb_ports == 1) ? 0 : 1;
+      sound_player.openPort( port_to_use );
+      this->selected_output_port = sound_player.getPortName( port_to_use );
+    }
   }
-  else
+
   {
-    const unsigned int port_to_use = (nb_ports == 1) ? 0 : 1;
-    sound_player.openPort( port_to_use );
-    this->selected_output_port = sound_player.getPortName( port_to_use );
+    // setting up the signal on_output_ports_menu_clicked->update_outputs_ports.
+    // update_outputs_ports is the function that fills up the menu entries with all the ports
+    // output ports available.
     auto menu_bar = this->menuBar();
     auto menu_output_port = menu_bar->findChild<QMenu*>("menuOutput_port",
 							Qt::FindDirectChildrenOnly);
@@ -318,6 +328,7 @@ MainWindow::MainWindow(QWidget *parent) :
     {
       connect(menu_output_port, SIGNAL(aboutToShow()), this, SLOT(update_output_ports()));
     }
+  }
 
   }
 }
