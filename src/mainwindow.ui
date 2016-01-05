@@ -115,7 +115,6 @@
     <property name="title">
      <string>&amp;Input</string>
     </property>
-    <addaction name="actionSelect_file"/>
    </widget>
    <addaction name="menuFile"/>
    <addaction name="menuInput"/>
@@ -184,22 +183,6 @@
   </connection>
   <connection>
    <sender>actionOpen</sender>
-   <signal>triggered()</signal>
-   <receiver>MainWindow</receiver>
-   <slot>open_file()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>-1</x>
-     <y>-1</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>508</x>
-     <y>270</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>actionSelect_file</sender>
    <signal>triggered()</signal>
    <receiver>MainWindow</receiver>
    <slot>open_file()</slot>
