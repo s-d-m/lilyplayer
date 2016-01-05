@@ -113,7 +113,7 @@
    </widget>
    <widget class="QMenu" name="menuInput">
     <property name="title">
-     <string>Input</string>
+     <string>&amp;Input</string>
     </property>
     <addaction name="actionSelect_file"/>
    </widget>
