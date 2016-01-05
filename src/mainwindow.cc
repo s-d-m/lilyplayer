@@ -123,6 +123,10 @@ void MainWindow::stop_song()
       std::vector<uint8_t>{ 0x80, key, 0x00 } );
   }
 
+  // reinitialise the song field
+  this->song.resize(0);
+  this->song_pos = INVALID_SONG_POS;
+
   process_keyboard_event(all_keys_up);
 }
 
