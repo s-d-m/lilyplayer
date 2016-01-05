@@ -336,17 +336,13 @@ void MainWindow::update_input_entries()
   }
 
   {
-    // add the file entry in the input menu.  Warning: this implementation takes as
-    // assumption that "select file" will never be the name of an input MIDI port.
+    // add the file entry in the input menu.
     std::string label { "select file" };
     const auto Qlabel = QString::fromStdString( label );
     auto button = menu_input->addAction(Qlabel);
-    button->setCheckable(true);
-    const auto select_this_one = ( label == selected_input );
-    button->setChecked( select_this_one );
 
     button->setActionGroup(action_group);
-    connect(button, SIGNAL(triggered()), this, SLOT(input_change()));
+    connect(button, SIGNAL(triggered()), this, SLOT(open_file()));
   }
 
   {
