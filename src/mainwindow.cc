@@ -301,6 +301,16 @@ void MainWindow::input_change()
     {
       this->stop_song();
       this->selected_input = button->text().toStdString();
+      const auto nb_ports = sound_listener.getPortCount();
+      for (unsigned int i = 0; i < nb_ports; ++i)
+      {
+	const auto port_name = sound_listener.getPortName(i);
+	if (port_name == selected_input)
+	{
+	  sound_listener.closePort();
+	  sound_listener.openPort(i);
+	}
+      }
     }
   }
 }
