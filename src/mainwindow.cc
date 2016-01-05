@@ -139,6 +139,7 @@ void MainWindow::open_file(const std::string& filename)
     const auto keyboard_events = get_key_events(midi_events);
     this->song = group_events_by_time(midi_events, keyboard_events);
     this->song_pos = 0;
+    sound_listener.closePort();
     song_event_loop();
   }
   catch (std::exception& e)
