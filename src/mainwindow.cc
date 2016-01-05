@@ -263,10 +263,6 @@ void MainWindow::update_output_ports()
       button->setCheckable(true);
       const auto select_this_port = ( port_name == selected_output_port );
       button->setChecked( select_this_port );
-      if (select_this_port)
-      {
-	this->selected_output_port = port_name;
-      }
 
       button->setActionGroup( action_group );
       connect(button, SIGNAL(triggered()), this, SLOT(output_port_change()));
@@ -318,10 +314,6 @@ void MainWindow::update_input_entries()
     button->setCheckable(true);
     const auto select_this_one = ( label == selected_input );
     button->setChecked( select_this_one );
-    if (select_this_one)
-    {
-      this->selected_input = label;
-    }
 
     button->setActionGroup(action_group);
     connect(button, SIGNAL(triggered()), this, SLOT(input_change()));
@@ -338,10 +330,6 @@ void MainWindow::update_input_entries()
       button->setCheckable(true);
       const auto select_this_port = ( port_name == selected_input );
       button->setChecked( select_this_port );
-      if (select_this_port)
-      {
-	this->selected_input = port_name;
-      }
 
       button->setActionGroup( action_group );
       connect(button, SIGNAL(triggered()), this, SLOT(input_change()));
