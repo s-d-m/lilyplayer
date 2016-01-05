@@ -275,6 +275,81 @@ void MainWindow::update_output_ports()
   }
 }
 
+void MainWindow::input_change()
+{
+}
+
+
+void MainWindow::update_input_entries()
+{
+  // find out which input is currently selected
+  auto menu_bar = this->menuBar();
+  if (menu_bar == nullptr)
+  {
+    std::cerr << "Error: couldn't find the menu bar\n";
+    return;
+  }
+
+  auto menu_input = menu_bar->findChild<QMenu*>("menuInput",
+						Qt::FindDirectChildrenOnly);
+  if (menu_input == nullptr)
+  {
+    std::cerr << "Error: couldn't find the input menu\n";
+    return;
+  }
+
+  // remove all the children!
+  menu_input->clear();
+
+  // find the action group.
+  auto action_group = menu_input->findChild<QActionGroup*>("",
+							   Qt::FindDirectChildrenOnly);
+  if (action_group == nullptr)
+  {
+    action_group = new QActionGroup( menu_input );
+  }
+
+  {
+    // add the file entry in the input menu.  Warning: this implementation takes as
+    // assumption that "select file" will never be the name of an input MIDI port.
+    std::string label { "select file" };
+    const auto Qlabel = QString::fromStdString( label );
+    auto button = menu_input->addAction(Qlabel);
+    button->setCheckable(true);
+    const auto select_this_one = ( label == selected_input );
+    button->setChecked( select_this_one );
+    if (select_this_one)
+    {
+      this->selected_input = label;
+    }
+
+    button->setActionGroup(action_group);
+    connect(button, SIGNAL(triggered()), this, SLOT(input_change()));
+  }
+
+  {
+    // Add one entry per input midi port
+    const auto nb_ports = sound_listener.getPortCount();
+    for (unsigned int i = 0; i < nb_ports; ++i)
+    {
+      const auto port_name = sound_listener.getPortName(i);
+      const auto label = QString::fromStdString( port_name );
+      auto button = menu_input->addAction(label);
+      button->setCheckable(true);
+      const auto select_this_port = ( port_name == selected_input );
+      button->setChecked( select_this_port );
+      if (select_this_port)
+      {
+	this->selected_input = port_name;
+      }
+
+      button->setActionGroup( action_group );
+      connect(button, SIGNAL(triggered()), this, SLOT(input_change()));
+    }
+  }
+}
+
+
 #pragma GCC diagnostic push
 #if !defined(__clang__)
   #pragma GCC diagnostic ignored "-Wzero-as-null-pointer-constant" // Qt is not effective-C++ friendy
@@ -287,7 +362,8 @@ MainWindow::MainWindow(QWidget *parent) :
   keyboard(),
   signal_checker_timer(),
   song(),
-  sound_player(RtMidi::LINUX_ALSA)
+  sound_player(RtMidi::LINUX_ALSA),
+  sound_listener(RtMidi::LINUX_ALSA)
 {
   ui->setupUi(this);
   ui->keyboard->setRenderHints(QPainter::Antialiasing | QPainter::SmoothPixmapTransform);
@@ -330,6 +406,23 @@ MainWindow::MainWindow(QWidget *parent) :
     }
   }
 
+  {
+    // setting up the signal on_input_menu_clicked->update_input_entries. Update_input_entries fills up
+    // the input menu with the available entries
+    // an important difference between the input_menu and the output_menu is that the input is not necessary
+    // a midi input port. It can be a file. And therefore, if there is no midi inputs detected, it's not a problem.
+    // and also, there is no need to automatically select an input port.
+    auto menu_bar = this->menuBar();
+    auto menu_input = menu_bar->findChild<QMenu*>("menuInput",
+						  Qt::FindDirectChildrenOnly);
+    if (menu_input == nullptr)
+    {
+      std::cerr << "Error: couldn't find the input menu\n";
+    }
+    else
+    {
+      connect(menu_input, SIGNAL(aboutToShow()), this, SLOT(update_input_entries()));
+    }
   }
 }
 
