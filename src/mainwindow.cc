@@ -180,11 +180,30 @@ void MainWindow::open_file()
 
 void MainWindow::set_output_port(const unsigned int i)
 {
-  sound_player.closePort();
-  sound_player.openPort(i);
-  const auto port_name = sound_player.getPortName(i);
-  this->selected_output_port = port_name;
-  this->update_output_ports();
+  try
+  {
+    sound_player.closePort();
+    sound_player.openPort(i);
+    const auto port_name = sound_player.getPortName(i);
+    this->selected_output_port = port_name;
+    this->update_output_ports();
+  }
+  catch (std::exception& e)
+  {
+    const auto err_msg = e.what();
+    QMessageBox::critical(this, tr("Failed to change the output port."),
+			  err_msg,
+			  QMessageBox::Ok,
+			  QMessageBox::Ok);
+
+    // failed to change port, clear the selected item. There is no need to set the button
+    // to unchecked as the menu is automatically closed after selecting an item, and the
+    // entries are regenerated when the menu is opened again.
+    this->selected_output_port.clear();
+
+    // make sure to close all output ports
+    this->sound_player.closePort();
+  }
 }
 
 void MainWindow::output_port_change()
@@ -296,26 +315,45 @@ void MainWindow::input_change()
   }
 
   const auto button_list = menu_input->findChildren<QAction*>(QString(), Qt::FindDirectChildrenOnly);
-  for (const auto& button : button_list)
+
+  try
   {
-    if (button->isChecked())
+    for (const auto& button : button_list)
     {
-      this->stop_song();
-      this->selected_input = button->text().toStdString();
-      const auto nb_ports = sound_listener.getPortCount();
-      for (unsigned int i = 0; i < nb_ports; ++i)
+      if (button->isChecked())
       {
-	const auto port_name = sound_listener.getPortName(i);
-	if (port_name == selected_input)
+	this->stop_song();
+	this->selected_input = button->text().toStdString();
+	const auto nb_ports = sound_listener.getPortCount();
+	for (unsigned int i = 0; i < nb_ports; ++i)
 	{
-	  sound_listener.closePort();
-	  sound_listener.openPort(i);
+	  const auto port_name = sound_listener.getPortName(i);
+	  if (port_name == selected_input)
+	  {
+	    sound_listener.closePort();
+	    sound_listener.openPort(i);
+	  }
 	}
       }
     }
   }
-}
+  catch (std::exception& e)
+  {
+    const auto err_msg = e.what();
+    QMessageBox::critical(this, tr("Failed to change the input."),
+			  err_msg,
+			  QMessageBox::Ok,
+			  QMessageBox::Ok);
 
+    // failed to change port, clear the selected item. There is no need to set the button
+    // to unchecked as the menu is automatically closed after selecting an item, and the
+    // entries are regenerated when the menu is opened again.
+    this->selected_input.clear();
+
+    // make sure to close all inputs ports
+    sound_listener.closePort();
+  }
+}
 
 void MainWindow::update_input_entries()
 {
