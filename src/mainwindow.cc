@@ -74,6 +74,7 @@ void MainWindow::song_event_loop()
 {
   if (song_pos == INVALID_SONG_POS)
   {
+    QTimer::singleShot(100, this, SLOT(song_event_loop()));
     return;
   }
 
@@ -93,7 +94,8 @@ void MainWindow::song_event_loop()
   if (song_pos + 1 == song.size())
   {
     // song is finished
-    song_pos = INVALID_SONG_POS;
+    stop_song();
+    QTimer::singleShot(100, this, SLOT(song_event_loop()));
   }
   else
   {
@@ -141,7 +143,6 @@ void MainWindow::open_file(const std::string& filename)
     this->song_pos = 0;
     sound_listener.closePort();
     this->selected_input.clear();
-    song_event_loop();
   }
   catch (std::exception& e)
   {
@@ -486,6 +487,10 @@ MainWindow::MainWindow(QWidget *parent) :
     {
       connect(menu_input, SIGNAL(aboutToShow()), this, SLOT(update_input_entries()));
     }
+  }
+
+  {
+    song_event_loop();
   }
 }
 
