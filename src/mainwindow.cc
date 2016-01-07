@@ -124,7 +124,7 @@ void MainWindow::stop_song()
   }
 
   // reinitialise the song field
-  this->song.resize(0);
+  this->song.clear();
   this->song_pos = INVALID_SONG_POS;
 
   process_keyboard_event(all_keys_up);
