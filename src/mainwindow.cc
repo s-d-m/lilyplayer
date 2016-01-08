@@ -108,28 +108,29 @@ void MainWindow::song_event_loop()
 
 void MainWindow::stop_song()
 {
-  // for each key, create a release key event. No matter if the key was actually
-  // pressed or not
-  music_event all_keys_up;
-  constexpr auto nb_keys = note_kind::do_8 - note_kind::la_0 + 1;
-  all_keys_up.key_events.reserve(nb_keys);
-  all_keys_up.midi_messages.reserve(nb_keys);
-
-  for (auto key = static_cast<uint8_t>(note_kind::la_0);
-       key <= static_cast<uint8_t>(note_kind::do_8);
-       ++key)
   {
-    all_keys_up.key_events.push_back(key_data{ .pitch = key,
-					        .ev_type = key_data::type::released });
-    all_keys_up.midi_messages.push_back(
-      std::vector<uint8_t>{ 0x80, key, 0x00 } );
+    // just close the output ports, and reopens it. This avoids getting a 'buzzing' noise
+    // being played continuously through the speakers. It also avoids the need to create a
+    // all-keys-up vector to get played through the MIDI output to release the piano keys.
+    sound_player.closePort();
+
+    const auto nb_ports = sound_player.getPortCount();
+    for (unsigned int i = 0; i < nb_ports; ++i)
+    {
+      const auto port_name = sound_player.getPortName(i);
+      if (port_name == selected_output_port)
+      {
+	sound_player.openPort(i);
+      }
+    }
   }
 
   // reinitialise the song field
   this->song.clear();
   this->song_pos = INVALID_SONG_POS;
 
-  process_keyboard_event(all_keys_up);
+  // reset all keys to up on the keyboard (doesn't play key_released events).
+  reset_color(keyboard);
 }
 
 void MainWindow::open_file(const std::string& filename)

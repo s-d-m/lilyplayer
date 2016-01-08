@@ -163,6 +163,16 @@ void reset_color(struct keys_color& keyboard, enum note_kind note)
   set_color(keyboard, note, Qt::white, Qt::black);
 }
 
+void reset_color(struct keys_color& keyboard)
+{
+  for (auto key = static_cast<uint8_t>(note_kind::la_0);
+       key <= static_cast<uint8_t>(note_kind::do_8);
+       ++key)
+  {
+    set_color(keyboard, static_cast<note_kind>(key), Qt::white, Qt::black);
+  }
+}
+
 
 void update_keyboard(const music_event& music_ev, struct keys_color& keyboard)
 {
