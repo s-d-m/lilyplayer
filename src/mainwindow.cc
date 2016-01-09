@@ -55,6 +55,7 @@ void MainWindow::process_keyboard_event(const music_event& keys_event)
 {
   update_keyboard(keys_event, this->keyboard);
   draw_keyboard(*(this->scene), this->keyboard);
+  this->update();
 
   for (const auto& message : keys_event.midi_messages)
   {
