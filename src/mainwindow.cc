@@ -129,6 +129,7 @@ void MainWindow::stop_song()
   // reinitialise the song field
   this->song.clear();
   this->song_pos = INVALID_SONG_POS;
+  this->is_in_pause = false;
 
   // reset all keys to up on the keyboard (doesn't play key_released events).
   reset_color(keyboard);
