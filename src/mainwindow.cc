@@ -300,6 +300,16 @@ void MainWindow::update_output_ports()
   }
 }
 
+
+void MainWindow::set_input_port(unsigned int i)
+{
+  const auto port_name = sound_listener.getPortName(i);
+  this->selected_input = port_name;
+  sound_listener.closePort();
+  sound_listener.openPort(i);
+}
+
+
 void MainWindow::input_change()
 {
   // find out which menu item has been clicked.
@@ -334,8 +344,7 @@ void MainWindow::input_change()
 	  const auto port_name = sound_listener.getPortName(i);
 	  if (port_name == selected_input)
 	  {
-	    sound_listener.closePort();
-	    sound_listener.openPort(i);
+	    this->set_input_port(i);
 	  }
 	}
       }

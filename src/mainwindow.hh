@@ -34,6 +34,7 @@ class MainWindow : public QMainWindow
     ~MainWindow();
     void open_file(const std::string& filename);
     void set_output_port(const unsigned int i);
+    void set_input_port(const unsigned int i);
 
   private:
     void stop_song();

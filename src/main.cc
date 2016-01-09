@@ -25,6 +25,9 @@ struct options
     bool list_ports;
     unsigned int output_port;
     bool was_output_port_set;
+    unsigned int input_port;
+    bool was_input_port_set;
+
     std::string filename;
 
     options()
@@ -33,6 +36,8 @@ struct options
       , list_ports (false)
       , output_port (0)
       , was_output_port_set(false)
+      , input_port (0)
+      , was_input_port_set (false)
       , filename ("")
     {
     }
@@ -70,6 +75,22 @@ struct options get_opts(const int argc, const char * const * const argv)
 	++i;
 	res.output_port = get_port(argv[i]);
 	res.was_output_port_set = true;
+      }
+      continue;
+    }
+
+    if ((arg == "-i") or (arg == "--input-port"))
+    {
+      if (i == argc - 1)
+      {
+	res.has_error = true;
+	return res;
+      }
+      else
+      {
+	++i;
+	res.input_port = get_port(argv[i]);
+	res.was_input_port_set = true;
       }
       continue;
     }
@@ -123,6 +144,11 @@ int main(const int argc, const char* const * const argv)
   if (opts.was_output_port_set)
   {
     w.set_output_port(opts.output_port);
+  }
+
+  if (opts.was_input_port_set)
+  {
+    w.set_input_port(opts.input_port);
   }
 
   if (opts.filename != "")
