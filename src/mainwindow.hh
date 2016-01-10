@@ -40,6 +40,10 @@ class MainWindow : public QMainWindow
     void stop_song();
     void process_keyboard_event(const music_event& keys_event);
     void keyPressEvent(QKeyEvent * event);
+    static void on_midi_input(double timestamp __attribute__((unused)), std::vector<unsigned char> *message, void* param);
+
+  signals:
+    void midi_message_received(QByteArray bytes);
 
   private slots:
     void song_event_loop();
@@ -49,6 +53,7 @@ class MainWindow : public QMainWindow
     void update_output_ports();
     void update_input_entries();
     void input_change();
+    void handle_input_midi(QByteArray bytes);
 
   private:
     static constexpr unsigned int INVALID_SONG_POS = std::numeric_limits<unsigned int>::max();

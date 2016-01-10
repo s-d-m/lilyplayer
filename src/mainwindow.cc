@@ -300,6 +300,42 @@ void MainWindow::update_output_ports()
   }
 }
 
+void MainWindow::handle_input_midi(QByteArray bytes)
+{
+  // convert QByteArray to std::vector<unsigned char>
+  std::vector<unsigned char> message (bytes.cbegin(), bytes.cend());
+
+  std::vector<midi_message> tmp;
+  tmp.push_back(message);
+
+  const music_event music_event { .time = 0,
+      .midi_message = tmp,
+      .key_events = midi_to_key_events(message) };
+
+  this->process_keyboard_event(music_event);
+}
+
+void MainWindow::on_midi_input(double timestamp __attribute__((unused)), std::vector<unsigned char> *message, void* param)
+{
+  if (message == nullptr)
+  {
+    throw std::invalid_argument("Error, invalid input message");
+  }
+
+  if (param == nullptr)
+  {
+    throw std::invalid_argument("Error, argument for input listener");
+  }
+
+  // converts std::vector<unsigned char> to QByteArray. necessary due to thread safety
+  const void * const data = message->data();
+  const int size = static_cast<int>(message->size());
+
+  QByteArray bytes (static_cast<const char* const>(data),  size);
+
+  auto window = static_cast<struct MainWindow*>(param);
+  emit window->midi_message_received(bytes);
+}
 
 void MainWindow::set_input_port(unsigned int i)
 {
@@ -307,6 +343,7 @@ void MainWindow::set_input_port(unsigned int i)
   this->selected_input = port_name;
   sound_listener.closePort();
   sound_listener.openPort(i);
+  sound_listener.setCallback(&MainWindow::on_midi_input, this);
 }
 
 
@@ -500,6 +537,8 @@ MainWindow::MainWindow(QWidget *parent) :
       connect(menu_input, SIGNAL(aboutToShow()), this, SLOT(update_input_entries()));
     }
   }
+
+  connect(this, SIGNAL(midi_message_received(QByteArray)), this, SLOT(handle_input_midi(QByteArray)));
 
   {
     song_event_loop();
