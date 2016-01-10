@@ -300,11 +300,8 @@ void MainWindow::update_output_ports()
   }
 }
 
-void MainWindow::handle_input_midi(QByteArray bytes)
+void MainWindow::handle_input_midi(std::vector<unsigned char> message)
 {
-  // convert QByteArray to std::vector<unsigned char>
-  std::vector<unsigned char> message (bytes.cbegin(), bytes.cend());
-
   std::vector<midi_message> tmp;
   tmp.push_back(message);
 
@@ -327,14 +324,8 @@ void MainWindow::on_midi_input(double timestamp __attribute__((unused)), std::ve
     throw std::invalid_argument("Error, argument for input listener");
   }
 
-  // converts std::vector<unsigned char> to QByteArray. necessary due to thread safety
-  const void * const data = message->data();
-  const int size = static_cast<int>(message->size());
-
-  QByteArray bytes (static_cast<const char* const>(data),  size);
-
   auto window = static_cast<struct MainWindow*>(param);
-  emit window->midi_message_received(bytes);
+  emit window->midi_message_received(*message);
 }
 
 void MainWindow::set_input_port(unsigned int i)
@@ -538,7 +529,10 @@ MainWindow::MainWindow(QWidget *parent) :
     }
   }
 
-  connect(this, SIGNAL(midi_message_received(QByteArray)), this, SLOT(handle_input_midi(QByteArray)));
+  {
+    qRegisterMetaType<std::vector<unsigned char>>("std::vector<unsigned char>");
+    connect(this, SIGNAL(midi_message_received(std::vector<unsigned char>)), this, SLOT(handle_input_midi(std::vector<unsigned char>)));
+  }
 
   {
     song_event_loop();

@@ -43,7 +43,7 @@ class MainWindow : public QMainWindow
     static void on_midi_input(double timestamp __attribute__((unused)), std::vector<unsigned char> *message, void* param);
 
   signals:
-    void midi_message_received(QByteArray bytes);
+    void midi_message_received(std::vector<unsigned char> bytes);
 
   private slots:
     void song_event_loop();
@@ -53,7 +53,7 @@ class MainWindow : public QMainWindow
     void update_output_ports();
     void update_input_entries();
     void input_change();
-    void handle_input_midi(QByteArray bytes);
+    void handle_input_midi(std::vector<unsigned char> bytes);
 
   private:
     static constexpr unsigned int INVALID_SONG_POS = std::numeric_limits<unsigned int>::max();
