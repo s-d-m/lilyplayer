@@ -1220,3 +1220,4 @@ QSplitter::handle:vertical {
     height: 1px;
 }
 )"
+
