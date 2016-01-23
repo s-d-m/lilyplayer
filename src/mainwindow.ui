@@ -6,9 +6,15 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1018</width>
+    <width>2042</width>
     <height>237</height>
    </rect>
+  </property>
+  <property name="minimumSize">
+   <size>
+    <width>1245</width>
+    <height>180</height>
+   </size>
   </property>
   <property name="acceptDrops">
    <bool>false</bool>
@@ -92,7 +98,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>1018</width>
+     <width>2042</width>
      <height>19</height>
     </rect>
    </property>
