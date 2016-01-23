@@ -324,7 +324,7 @@ void MainWindow::on_midi_input(double timestamp __attribute__((unused)), std::ve
     throw std::invalid_argument("Error, argument for input listener");
   }
 
-  auto window = static_cast<struct MainWindow*>(param);
+  auto window = static_cast<class MainWindow*>(param);
   emit window->midi_message_received(*message);
 }
 
