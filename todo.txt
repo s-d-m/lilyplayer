@@ -1,0 +1,13 @@
+- UNITARY TESTS!!!
+- DOCUMENTATION!!!
+
+- choose a license.
+- Fix the memory leaks occuring in libRtMidi (or move away from libRtMidi).
+- Workaround the libRtMidi problem that prevents screencasters to records the sound.
+- auto detect midi outputs and choose one (avoid user to set the output port).
+- better reporting on input and output ports
+- replace the suboptimal implementations in the code by proper ones.
+- use c++14 features to simplify a bit the code here and there.
+- improve Makefile to make it more compliant with GNU conventions
+    see: http://www.gnu.org/prep/standards/standards.html#Makefile-Conventions
+- generate debian packages to make installation easier
