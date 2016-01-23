@@ -180,9 +180,17 @@ ${TARGET}: ${OBJS}
 ${RESOURCE_CODE}: ${QT_STYLE_FILES}
 	cd ../qdarkstyle && ${RCC} -o ../src/"$@" ${RC_FILE}
 
+
+define specific_flags
+ $(if $(findstring clang,$(CXX)),\
+   $(if $(findstring "resources.o",$(1)),-Wno-exit-time-destructors -Wno-global-constructors,)\
+   $(if $(findstring "moc_mainwindow.o",$(1)),-Wno-undefined-reinterpret-cast,)\
+  )
+endef
+
 %.o: %.cc ${FORMS_HEADERS}
-	${CXX} ${CXXFLAGS} ${INCLUDES} -MD -c -o "$@" "$<"
-	 @cp $*.d $*.P; \
+	${CXX} ${CXXFLAGS} $(call specific_flags,"$@") ${INCLUDES} -MD -c -o "$@" "$<"
+	@cp $*.d $*.P; \
 	   sed -e 's/#.*//' -e 's/^[^:]*: *//' -e 's/ *\\$$//' \
 	       -e '/^$$/ d' -e 's/$$/ :/' < $*.d >> $*.P; \
 	   rm -f $*.d
