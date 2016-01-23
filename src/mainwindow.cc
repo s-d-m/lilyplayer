@@ -305,9 +305,9 @@ void MainWindow::handle_input_midi(std::vector<unsigned char> message)
   std::vector<midi_message> tmp;
   tmp.push_back(message);
 
-  const music_event event { .time = 0,
-      .midi_message = tmp,
-      .key_events = midi_to_key_events(message) };
+  const music_event event ( /* time */ 0,
+			    /* midi_message */ tmp,
+			    /* key events */ midi_to_key_events(message) );
 
   this->process_keyboard_event(event);
 }
