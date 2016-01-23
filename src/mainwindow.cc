@@ -305,11 +305,11 @@ void MainWindow::handle_input_midi(std::vector<unsigned char> message)
   std::vector<midi_message> tmp;
   tmp.push_back(message);
 
-  const music_event music_event { .time = 0,
+  const music_event event { .time = 0,
       .midi_message = tmp,
       .key_events = midi_to_key_events(message) };
 
-  this->process_keyboard_event(music_event);
+  this->process_keyboard_event(event);
 }
 
 void MainWindow::on_midi_input(double timestamp __attribute__((unused)), std::vector<unsigned char> *message, void* param)
