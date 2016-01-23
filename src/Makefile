@@ -2,7 +2,7 @@ dummy := $(shell if (! test -f ./Makefile.vars) ; then ./configure ; fi)
 include Makefile.vars
 
 TARGET_DIR := ../bin
-TARGET := ${TARGET_DIR}/lilyplayer-gui
+TARGET := ${TARGET_DIR}/pianogui
 
 LIBS += -lrtmidi
 
