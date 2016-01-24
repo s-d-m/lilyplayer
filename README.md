@@ -1,17 +1,7 @@
-PIANOGUI
+Lilyplayer
 ========
 
-Pianogui is a simple application that let's you play a midi file, or a midi
-input, and shows how it should be played on a piano.
-Pianogui is the "graphical" equivalent of [Pianoterm][pianoterm site]
-
-[pianoterm site]: https://github.com/s-d-m/pianoterm
-
-Below is a screenshots of the main window.
-
-
-![screenshot of pianoguy] (./misc/mainwindow.png?raw=true)
-
+Lilyplayer is not ready yet!
 
 License
 ------
@@ -21,7 +11,7 @@ Todo: choose a license
 Build dependencies
 ----------------
 
-`Pianogui` requires a C++14 compiler to build. (g++ 5.3 and clang++ 3.6.2 work both fine).
+`Lilyplayer` requires a C++14 compiler to build. (g++ 5.3 and clang++ 3.6.2 work both fine).
 It also depends on the following libraries:
 
 - [`libRtMidi`][rtmidi]
@@ -30,7 +20,7 @@ It also depends on the following libraries:
 [rtmidi]: http://www.music.mcgill.ca/~gary/rtmidi/
 [qt5]: http://www.qt.io/
 
-Also note that `pianogui` does not play music itself. Instead it
+Also note that `lilyplayer` does not play music itself. Instead it
 relies on a system-wide midi sequencer.  On `GNU/Linux` you might
 consider installing `timidity`
 
@@ -42,11 +32,11 @@ On `debian`, one can install them the following way:
 Compiling instructions
 -------------------
 
-Once all the dependencies have been installed, you can simply compile `pianogui` by entering:
+Once all the dependencies have been installed, you can simply compile `lilyplayer` by entering:
 
 	make
 
-This will generate the `pianogui` binary in `./bin`
+This will generate the `lilyplayer` binary in `./bin`
 
 How to use
 ----------
@@ -57,7 +47,7 @@ Pianoterm needs a midi sequencer. If you decided to use timidity, you will need 
 
 Then you can run the application by typing
 
-	./bin/pianogui
+	./bin/lilyplayer
 
 This will open an a window showing a piano keyboard.
 On the "output port" menu, you can select the midi sequencer like `TiMidity xxx:0`.
