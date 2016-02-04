@@ -4,7 +4,7 @@ include Makefile.vars
 TARGET_DIR := ../bin
 TARGET := ${TARGET_DIR}/lilyplayer
 
-LIBS += -lrtmidi
+LIBS += -lrtmidi -lpugixml
 
 LIBS += ${QT_LIBS}
 DEFINES += ${QT_DEFINES}
@@ -63,6 +63,7 @@ SRC :=  main.cc  \
 	keyboard.cc \
 	signals_handler.cc \
 	midi_reader.cc \
+	bin_file_reader.cc \
 	utils.cc \
 	keyboard_events_extractor.cc \
 	${MOC_FILES} \

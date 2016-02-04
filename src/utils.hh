@@ -6,6 +6,7 @@
 #include <fstream>
 #include "midi_reader.hh"
 #include "keyboard_events_extractor.hh"
+#include "bin_file_reader.hh"
 
 
 #define OCTAVE(X) \

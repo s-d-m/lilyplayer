@@ -15,6 +15,7 @@
 
 #include "keyboard.hh"
 #include "midi_reader.hh"
+#include "bin_file_reader.hh"
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Weffc++" // Qt is not effective-C++ friendy
