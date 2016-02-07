@@ -5,16 +5,7 @@
 #include <cstdint>
 #include <string>
 
-struct key_down
-{
-    uint8_t pitch;
-    uint8_t staff_num;
-};
-
-struct key_up
-{
-    uint8_t pitch;
-};
+#include "utils.hh"
 
 #ifndef __has_attribute
   #define __has_attribute(x) 0  // Compatibility with non-clang compilers.

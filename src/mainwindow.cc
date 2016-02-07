@@ -51,24 +51,24 @@ void MainWindow::keyPressEvent(QKeyEvent* event)
   }
 }
 
-void MainWindow::process_keyboard_event(const music_event& keys_event)
+void MainWindow::process_keyboard_event(const std::vector<key_down>& keys_down,
+					const std::vector<key_up>& keys_up,
+					const std::vector<midi_message_t>& messages)
 {
-  update_keyboard(keys_event, this->keyboard);
+  update_keyboard(keys_down, keys_up, this->keyboard);
   draw_keyboard(*(this->scene), this->keyboard);
   this->update();
 
-  for (const auto& message : keys_event.midi_messages)
+  for (auto message : messages)
   {
-    auto tmp = message; // can't use message directly since message is const and
-			// sendMessage doesn't take a const vector
-    sound_player.sendMessage(&tmp);
-
-    // could use the following to cast the const away: but since there is no
-    // guarantee that the libRtMidi doesn't modify the data ... (I know the I
-    // can read the code)
-    //
-    //sound_player.sendMessage(const_cast<midi_message*>(&message));
+    sound_player.sendMessage(&message);
   }
+}
+
+void MainWindow::process_keyboard_event(const music_sheet_event& event)
+{
+  const auto midi_messages = get_midi_from_keys_events(event.keys_down, event.keys_up);
+  this->process_keyboard_event(event.keys_down, event.keys_up, midi_messages);
 }
 
 void MainWindow::song_event_loop()
@@ -85,14 +85,14 @@ void MainWindow::song_event_loop()
     return;
   }
 
-  if ((song_pos != 0) and (song_pos >= song.size()))
+  if ((song_pos != 0) and (song_pos >= this->song.events.size()))
   {
     throw std::runtime_error("Invalid song position found");
   }
 
-  process_keyboard_event( song[song_pos] );
+  process_keyboard_event( song.events[song_pos] );
 
-  if (song_pos + 1 == song.size())
+  if (song_pos + 1 == this->song.events.size())
   {
     // song is finished
     stop_song();
@@ -102,7 +102,7 @@ void MainWindow::song_event_loop()
   {
     // call this function back for the next event
     song_pos++;
-    QTimer::singleShot( static_cast<int>((song[song_pos].time - song[song_pos - 1].time) / 1'000'000), this, SLOT(song_event_loop()) );
+    QTimer::singleShot( static_cast<int>((song.events[song_pos].time - song.events[song_pos - 1].time) / 1'000'000), this, SLOT(song_event_loop()) );
   }
 
 }
@@ -127,7 +127,7 @@ void MainWindow::stop_song()
   }
 
   // reinitialise the song field
-  this->song.clear();
+  this->song = bin_song_t();
   this->song_pos = INVALID_SONG_POS;
   this->is_in_pause = false;
 
@@ -140,9 +140,7 @@ void MainWindow::open_file(const std::string& filename)
   try
   {
     stop_song();
-    const auto midi_events = get_midi_events(filename);
-    const auto keyboard_events = get_key_events(midi_events);
-    this->song = group_events_by_time(midi_events, keyboard_events);
+    this->song = get_song(filename);
     this->song_pos = 0;
     sound_listener.closePort();
     this->selected_input.clear();
@@ -302,14 +300,9 @@ void MainWindow::update_output_ports()
 
 void MainWindow::handle_input_midi(std::vector<unsigned char> message)
 {
-  std::vector<midi_message> tmp;
-  tmp.push_back(message);
-
-  const music_event event ( /* time */ 0,
-			    /* midi_message */ tmp,
-			    /* key events */ midi_to_key_events(message) );
-
-  this->process_keyboard_event(event);
+  const auto key_events = midi_to_key_events(message);
+  const std::vector<midi_message_t> messages { { message } };
+  this->process_keyboard_event(key_events.keys_down, key_events.keys_up, messages);
 }
 
 void MainWindow::on_midi_input(double timestamp __attribute__((unused)), std::vector<unsigned char> *message, void* param)

@@ -13,8 +13,8 @@
 
 #include <RtMidi.h>
 
+#include "utils.hh"
 #include "keyboard.hh"
-#include "midi_reader.hh"
 #include "bin_file_reader.hh"
 
 #pragma GCC diagnostic push
@@ -39,9 +39,13 @@ class MainWindow : public QMainWindow
 
   private:
     void stop_song();
-    void process_keyboard_event(const music_event& keys_event);
+    void process_keyboard_event(const music_sheet_event& keys_event);
     void keyPressEvent(QKeyEvent * event);
     static void on_midi_input(double timestamp __attribute__((unused)), std::vector<unsigned char> *message, void* param);
+    void process_keyboard_event(const std::vector<key_down>& keys_down,
+				const std::vector<key_up>& keys_up,
+				const std::vector<midi_message_t>& messages);
+
 
   signals:
     void midi_message_received(std::vector<unsigned char> bytes);
@@ -63,7 +67,7 @@ class MainWindow : public QMainWindow
     QGraphicsScene *scene;
     struct keys_color keyboard;
     QTimer signal_checker_timer;
-    song_t song;
+    bin_song_t song;
     RtMidiOut sound_player;
     RtMidiIn  sound_listener;
     std::string selected_output_port = "";
