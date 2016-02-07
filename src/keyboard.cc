@@ -181,7 +181,32 @@ void update_keyboard(const std::vector<key_down>& keys_down,
   /* for each key pressed */
   for (const auto& key : keys_down)
   {
-    set_color(keyboard, static_cast<enum note_kind>(key.pitch), Qt::blue, Qt::cyan);
+    QColor white_keys_color;
+    QColor black_keys_color;
+
+    switch (key.staff_num)
+    {
+      case 0:
+	white_keys_color = Qt::blue;
+	black_keys_color = Qt::cyan;
+	break;
+      case 1:
+	white_keys_color = Qt::red;
+	black_keys_color = Qt::magenta;
+	break;
+      case 2:
+	white_keys_color = Qt::green;
+	black_keys_color = Qt::yellow;
+	break;
+      default:
+	white_keys_color = Qt::gray;
+	black_keys_color = Qt::darkYellow;
+	break;
+    }
+
+
+    set_color(keyboard, static_cast<enum note_kind>(key.pitch),
+	      white_keys_color, black_keys_color);
   }
 
   /* for each key released */
