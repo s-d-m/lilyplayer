@@ -133,6 +133,8 @@ void MainWindow::stop_song()
 
   // reset all keys to up on the keyboard (doesn't play key_released events).
   reset_color(keyboard);
+  draw_keyboard(*(this->scene), this->keyboard);
+  this->update();
 }
 
 void MainWindow::open_file(const std::string& filename)
