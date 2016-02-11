@@ -4,9 +4,28 @@
 #include <vector>
 #include <limits>
 #include <fstream>
-#include "midi_reader.hh"
-#include "keyboard_events_extractor.hh"
 
+struct key_down
+{
+    key_down(uint8_t _pitch, uint8_t _staff_num)
+      : pitch(_pitch)
+      , staff_num(_staff_num)
+    {
+    }
+
+    uint8_t pitch;
+    uint8_t staff_num;
+};
+
+struct key_up
+{
+    explicit key_up(uint8_t _pitch)
+      : pitch(_pitch)
+    {
+    }
+
+    uint8_t pitch;
+};
 
 #define OCTAVE(X) \
   do_##X,	  \
@@ -44,45 +63,30 @@ enum note_kind : uint8_t
 #undef OCTAVE
 
 
-using midi_message = std::vector<uint8_t>;
+using midi_message_t = std::vector<uint8_t>;
 
-struct music_event
-{
-    uint64_t time; // occuring time
-    std::vector<midi_message> midi_messages;
-    std::vector<struct key_data> key_events;
-
-    music_event()
-      : time (std::numeric_limits<decltype(time)>::max())
-      , midi_messages ()
-      , key_events ()
-    {
-    }
-
-    music_event(decltype(music_event::time) init_time,
-		decltype(music_event::midi_messages) init_midi_messages,
-		decltype(music_event::key_events) init_key_events)
-      : time (init_time)
-      , midi_messages (init_midi_messages)
-      , key_events (init_key_events)
-    {
-    }
-};
-
-// a song is just a succession of music_event to be played
-using song_t = std::vector<struct music_event>;
-
-song_t group_events_by_time(const std::vector<struct midi_event>& midi_events,
-			    const std::vector<struct key_event>& key_events);
-
-
-bool is_key_down_event(const struct midi_event& ev) __attribute__((pure));
-bool is_key_release_event(const struct midi_event& ev) __attribute__((pure));
 bool is_key_down_event(const std::vector<uint8_t>& data) __attribute__((pure));
 bool is_key_release_event(const std::vector<uint8_t>& data) __attribute__((pure));
 
-std::vector<struct key_data>
-midi_to_key_events(const std::vector<uint8_t>& message_stream);
+struct key_events
+{
+    key_events()
+      : keys_down()
+      , keys_up()
+    {
+    }
+
+    std::vector<key_down> keys_down;
+    std::vector<key_up> keys_up;
+};
+
+key_events
+midi_to_key_events(const std::vector<uint8_t>& message_stream) __attribute__((pure));
+
+std::vector<midi_message_t>
+get_midi_from_keys_events(const std::vector<key_down>& keys_down,
+			  const std::vector<key_up>& keys_up);
+
 
 void list_midi_ports(std::ostream& out);
 unsigned int get_port(const std::string& s);

@@ -9,7 +9,7 @@ static const char* const stylesheet =
 
 static void usage(const char* const prog_name, std::ostream& out_stream = std::cerr)
 {
-  out_stream << "Usage: " << prog_name << " [Options] [midi_file]\n"
+  out_stream << "Usage: " << prog_name << " [Options] [file]\n"
     "\n"
     "Options:\n"
     "  -h, --help			print this help\n"

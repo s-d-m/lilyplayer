@@ -64,6 +64,8 @@ void draw_keyboard(QGraphicsScene& scene, const struct keys_color& keyboard);
 void reset_color(struct keys_color& keyboard, enum note_kind note);
 void reset_color(struct keys_color& keyboard); // reset all keys
 void set_color(struct keys_color& keyboard, enum note_kind note, QColor normal_key_color, QColor diese_key_color);
-void update_keyboard(const music_event& music_ev, struct keys_color& keyboard);
+void update_keyboard(const std::vector<key_down>& keys_down,
+		     const std::vector<key_up>& keys_up,
+		     struct keys_color& keyboard);
 
 #endif

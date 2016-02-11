@@ -174,29 +174,44 @@ void reset_color(struct keys_color& keyboard)
 }
 
 
-void update_keyboard(const music_event& music_ev, struct keys_color& keyboard)
+void update_keyboard(const std::vector<key_down>& keys_down,
+		     const std::vector<key_up>& keys_up,
+		     struct keys_color& keyboard)
 {
-
-  /* update the keyboard */
-  for (const auto& k_ev : music_ev.key_events)
+  /* for each key pressed */
+  for (const auto& key : keys_down)
   {
-    switch (k_ev.ev_type)
+    QColor white_keys_color;
+    QColor black_keys_color;
+
+    switch (key.staff_num)
     {
-      case key_data::type::pressed:
-	set_color(keyboard, static_cast<enum note_kind>(k_ev.pitch), Qt::blue, Qt::cyan);
+      case 0:
+	white_keys_color = Qt::blue;
+	black_keys_color = Qt::cyan;
 	break;
-
-      case key_data::type::released:
-	reset_color(keyboard, static_cast<enum note_kind>(k_ev.pitch));
+      case 1:
+	white_keys_color = Qt::red;
+	black_keys_color = Qt::magenta;
 	break;
-
-#if !defined(__clang__)
-// clang complains that all values are handled in the switch and issue
-// a warning for the default case
-// gcc complains about a missing default
+      case 2:
+	white_keys_color = Qt::green;
+	black_keys_color = Qt::yellow;
+	break;
       default:
-	  break;
-#endif
+	white_keys_color = Qt::gray;
+	black_keys_color = Qt::darkYellow;
+	break;
     }
+
+
+    set_color(keyboard, static_cast<enum note_kind>(key.pitch),
+	      white_keys_color, black_keys_color);
+  }
+
+  /* for each key released */
+  for (const auto& key : keys_up)
+  {
+    reset_color(keyboard, static_cast<enum note_kind>(key.pitch));
   }
 }
