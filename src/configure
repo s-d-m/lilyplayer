@@ -29,7 +29,7 @@ function get_qt_modules()
 
 function get_qt_dummy_Makefile()
 {
-    qmake -o /dev/stdout <(echo "QT += $(get_qt_modules)\CONFIG += c++14")
+    qmake -o /dev/stdout <(echo -e "$(get_qt_modules | sed 's/\(.*\)/QT += \1/')\nCONFIG += c++14")
 }
 
 function get_qt_defines()
