@@ -22,7 +22,7 @@ function get_uic_binary()
 
 function get_qt_modules()
 {
-    for module in "widgets" "core" "gui" ; do
+    for module in "widgets" "core" "gui" "svg" ; do
 	echo "${module}"
     done
 }
