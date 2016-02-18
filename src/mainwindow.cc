@@ -154,6 +154,7 @@ void MainWindow::open_file(const std::string& filename)
 			  err_msg,
 			  QMessageBox::Ok,
 			  QMessageBox::Ok);
+    stop_song();
   }
 }
 
