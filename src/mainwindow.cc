@@ -3,6 +3,7 @@
 #include <QFileDialog>
 #include <QMessageBox>
 #include <QKeyEvent>
+#include <QGraphicsSvgItem>
 #include "mainwindow.hh"
 #include "ui_mainwindow.hh"
 
@@ -110,6 +111,16 @@ void MainWindow::song_event_loop()
 void MainWindow::stop_song()
 {
   {
+    // remove all the music sheets
+    for (const auto item : music_sheets)
+    {
+      music_sheet_scene->removeItem(item);
+      delete item;
+    }
+    music_sheets.clear();
+  }
+
+  {
     // just close the output ports, and reopens it. This avoids getting a 'buzzing' noise
     // being played continuously through the speakers. It also avoids the need to create a
     // all-keys-up vector to get played through the MIDI output to release the piano keys.
@@ -146,6 +157,24 @@ void MainWindow::open_file(const std::string& filename)
     this->song_pos = 0;
     sound_listener.closePort();
     this->selected_input.clear();
+
+    if (this->song.svg_files.empty())
+    {
+      throw std::runtime_error("Invalid file format: it contains no music sheet");
+    }
+
+    const auto& first_sheet = this->song.svg_files[0];
+    const QByteArray music_sheet (static_cast<const char*>(static_cast<const void*>(first_sheet.data.data())),
+				  static_cast<int>(first_sheet.data.size()));
+    this->renderer.load(music_sheet);
+
+    auto sheet = new QGraphicsSvgItem;
+    sheet->setSharedRenderer(&renderer);
+    sheet->setFlags(QGraphicsItem::ItemClipsToShape);
+    sheet->setCacheMode(QGraphicsItem::NoCache);
+    sheet->setZValue(0);
+    music_sheets.emplace_back(sheet);
+    music_sheet_scene->addItem(sheet);
   }
   catch (std::exception& e)
   {
@@ -460,6 +489,9 @@ MainWindow::MainWindow(QWidget *parent) :
   ui(new Ui::MainWindow),
   keyboard_scene(new QGraphicsScene(this)),
   keyboard(),
+  music_sheet_scene(new QGraphicsScene(this)),
+  music_sheets(),
+  renderer(),
   signal_checker_timer(),
   song(),
   sound_player(RtMidi::LINUX_ALSA),
@@ -469,6 +501,8 @@ MainWindow::MainWindow(QWidget *parent) :
   ui->keyboard->setRenderHints(QPainter::Antialiasing | QPainter::SmoothPixmapTransform);
   ui->keyboard->setScene(keyboard_scene);
   draw_keyboard(*keyboard_scene, this->keyboard);
+
+  ui->music_sheet->setScene(music_sheet_scene);
 
   connect(&signal_checker_timer, SIGNAL(timeout()), this, SLOT(look_for_signals_change()));
   signal_checker_timer.start(100 /* ms */);

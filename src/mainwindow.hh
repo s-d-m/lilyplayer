@@ -6,6 +6,7 @@
 
 #include <QGraphicsView>
 #include <QGraphicsItem>
+#include <QSvgRenderer>
 
 #include <QTimer>
 
@@ -25,6 +26,8 @@
 namespace Ui {
   class MainWindow;
 }
+
+class QGraphicsSvgItem;
 
 class MainWindow : public QMainWindow
 {
@@ -66,6 +69,9 @@ class MainWindow : public QMainWindow
     Ui::MainWindow *ui;
     QGraphicsScene *keyboard_scene;
     struct keys_color keyboard;
+    QGraphicsScene *music_sheet_scene;
+    std::vector<QGraphicsSvgItem*> music_sheets;
+    QSvgRenderer renderer;
     QTimer signal_checker_timer;
     bin_song_t song;
     RtMidiOut sound_player;
