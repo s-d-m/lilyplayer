@@ -66,10 +66,41 @@ void MainWindow::process_keyboard_event(const std::vector<key_down>& keys_down,
   }
 }
 
-void MainWindow::process_keyboard_event(const music_sheet_event& event)
+void MainWindow::display_music_sheet(const unsigned music_sheet_pos)
 {
+  // remove all the music sheets
+  music_sheet_scene->clear();
+
+  if (this->song.svg_files.size() <= music_sheet_pos)
+  {
+    throw std::runtime_error("Invalid file format: it doesn't have enough music sheets");
+  }
+
+  const auto& this_sheet = this->song.svg_files[music_sheet_pos];
+  const QByteArray music_sheet (static_cast<const char*>(static_cast<const void*>(this_sheet.data.data())),
+				static_cast<int>(this_sheet.data.size()));
+  this->renderer.load(music_sheet);
+
+  auto sheet = new QGraphicsSvgItem;
+  sheet->setSharedRenderer(&renderer);
+  sheet->setFlags(QGraphicsItem::ItemClipsToShape);
+  sheet->setCacheMode(QGraphicsItem::NoCache);
+  sheet->setZValue(0);
+  music_sheet_scene->addItem(sheet);
+}
+
+void MainWindow::process_music_sheet_event(const music_sheet_event& event)
+{
+  // process the keyboard event. Must have one.
   const auto midi_messages = get_midi_from_keys_events(event.keys_down, event.keys_up);
   this->process_keyboard_event(event.keys_down, event.keys_up, midi_messages);
+
+  // is there a svg file change?
+  const auto has_svg_file_change = ((event.sheet_events & has_event::svg_file_change) != 0);
+  if (has_svg_file_change)
+  {
+    display_music_sheet(event.new_svg_file);
+  }
 }
 
 void MainWindow::song_event_loop()
@@ -91,7 +122,7 @@ void MainWindow::song_event_loop()
     throw std::runtime_error("Invalid song position found");
   }
 
-  process_keyboard_event( song.events[song_pos] );
+  process_music_sheet_event( song.events[song_pos] );
 
   if (song_pos + 1 == this->song.events.size())
   {
@@ -110,15 +141,7 @@ void MainWindow::song_event_loop()
 
 void MainWindow::stop_song()
 {
-  {
-    // remove all the music sheets
-    for (const auto item : music_sheets)
-    {
-      music_sheet_scene->removeItem(item);
-      delete item;
-    }
-    music_sheets.clear();
-  }
+  music_sheet_scene->clear();
 
   {
     // just close the output ports, and reopens it. This avoids getting a 'buzzing' noise
@@ -158,23 +181,7 @@ void MainWindow::open_file(const std::string& filename)
     sound_listener.closePort();
     this->selected_input.clear();
 
-    if (this->song.svg_files.empty())
-    {
-      throw std::runtime_error("Invalid file format: it contains no music sheet");
-    }
-
-    const auto& first_sheet = this->song.svg_files[0];
-    const QByteArray music_sheet (static_cast<const char*>(static_cast<const void*>(first_sheet.data.data())),
-				  static_cast<int>(first_sheet.data.size()));
-    this->renderer.load(music_sheet);
-
-    auto sheet = new QGraphicsSvgItem;
-    sheet->setSharedRenderer(&renderer);
-    sheet->setFlags(QGraphicsItem::ItemClipsToShape);
-    sheet->setCacheMode(QGraphicsItem::NoCache);
-    sheet->setZValue(0);
-    music_sheets.emplace_back(sheet);
-    music_sheet_scene->addItem(sheet);
+    display_music_sheet(0);
   }
   catch (std::exception& e)
   {
@@ -490,7 +497,6 @@ MainWindow::MainWindow(QWidget *parent) :
   keyboard_scene(new QGraphicsScene(this)),
   keyboard(),
   music_sheet_scene(new QGraphicsScene(this)),
-  music_sheets(),
   renderer(),
   signal_checker_timer(),
   song(),

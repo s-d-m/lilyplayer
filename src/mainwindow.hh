@@ -42,7 +42,8 @@ class MainWindow : public QMainWindow
 
   private:
     void stop_song();
-    void process_keyboard_event(const music_sheet_event& keys_event);
+    void process_music_sheet_event(const music_sheet_event& keys_event);
+    void display_music_sheet(const unsigned music_sheet_pos);
     void keyPressEvent(QKeyEvent * event);
     static void on_midi_input(double timestamp __attribute__((unused)), std::vector<unsigned char> *message, void* param);
     void process_keyboard_event(const std::vector<key_down>& keys_down,
@@ -70,7 +71,6 @@ class MainWindow : public QMainWindow
     QGraphicsScene *keyboard_scene;
     struct keys_color keyboard;
     QGraphicsScene *music_sheet_scene;
-    std::vector<QGraphicsSvgItem*> music_sheets;
     QSvgRenderer renderer;
     QTimer signal_checker_timer;
     bin_song_t song;
