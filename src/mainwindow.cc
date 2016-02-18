@@ -56,7 +56,7 @@ void MainWindow::process_keyboard_event(const std::vector<key_down>& keys_down,
 					const std::vector<midi_message_t>& messages)
 {
   update_keyboard(keys_down, keys_up, this->keyboard);
-  draw_keyboard(*(this->scene), this->keyboard);
+  draw_keyboard(*(this->keyboard_scene), this->keyboard);
   this->update();
 
   for (auto message : messages)
@@ -133,7 +133,7 @@ void MainWindow::stop_song()
 
   // reset all keys to up on the keyboard (doesn't play key_released events).
   reset_color(keyboard);
-  draw_keyboard(*(this->scene), this->keyboard);
+  draw_keyboard(*(this->keyboard_scene), this->keyboard);
   this->update();
 }
 
@@ -457,7 +457,7 @@ void MainWindow::update_input_entries()
 MainWindow::MainWindow(QWidget *parent) :
   QMainWindow(parent),
   ui(new Ui::MainWindow),
-  scene(new QGraphicsScene(this)),
+  keyboard_scene(new QGraphicsScene(this)),
   keyboard(),
   signal_checker_timer(),
   song(),
@@ -466,8 +466,8 @@ MainWindow::MainWindow(QWidget *parent) :
 {
   ui->setupUi(this);
   ui->keyboard->setRenderHints(QPainter::Antialiasing | QPainter::SmoothPixmapTransform);
-  ui->keyboard->setScene(scene);
-  draw_keyboard(*scene, this->keyboard);
+  ui->keyboard->setScene(keyboard_scene);
+  draw_keyboard(*keyboard_scene, this->keyboard);
 
   connect(&signal_checker_timer, SIGNAL(timeout()), this, SLOT(look_for_signals_change()));
   signal_checker_timer.start(100 /* ms */);

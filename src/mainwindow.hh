@@ -64,7 +64,7 @@ class MainWindow : public QMainWindow
     static constexpr unsigned int INVALID_SONG_POS = std::numeric_limits<unsigned int>::max();
 
     Ui::MainWindow *ui;
-    QGraphicsScene *scene;
+    QGraphicsScene *keyboard_scene;
     struct keys_color keyboard;
     QTimer signal_checker_timer;
     bin_song_t song;
