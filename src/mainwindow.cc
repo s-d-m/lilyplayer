@@ -303,6 +303,13 @@ void MainWindow::update_output_ports()
     return;
   }
 
+  const auto nb_ports = sound_player.getPortCount();
+  if (nb_ports == 0)
+  {
+    std::cerr << "Sorry: can't populate menu, no output midi port found\n";
+    return;
+  }
+
   // remove all the children!
   menu_output_port->clear();
 
@@ -314,26 +321,17 @@ void MainWindow::update_output_ports()
     action_group = new QActionGroup( menu_output_port );
   }
 
-  const auto nb_ports = sound_player.getPortCount();
-  if (nb_ports == 0)
+  for (unsigned int i = 0; i < nb_ports; ++i)
   {
-    std::cerr << "Sorry: can't populate menu, no output midi port found\n";
-  }
-  else
-  {
-    for (unsigned int i = 0; i < nb_ports; ++i)
-    {
-      const auto port_name = sound_player.getPortName(i);
-      const auto label = QString::fromStdString( port_name );
-      auto button = menu_output_port->addAction(label);
-      button->setCheckable(true);
-      const auto select_this_port = ( port_name == selected_output_port );
-      button->setChecked( select_this_port );
+    const auto port_name = sound_player.getPortName(i);
+    const auto label = QString::fromStdString( port_name );
+    auto button = menu_output_port->addAction(label);
+    button->setCheckable(true);
+    const auto select_this_port = ( port_name == selected_output_port );
+    button->setChecked( select_this_port );
 
-      button->setActionGroup( action_group );
-      connect(button, SIGNAL(triggered()), this, SLOT(output_port_change()));
-    }
-
+    button->setActionGroup( action_group );
+    connect(button, SIGNAL(triggered()), this, SLOT(output_port_change()));
   }
 }
 
