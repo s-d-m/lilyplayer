@@ -244,6 +244,26 @@ bin_song_t get_song(const std::string& filename)
     }
   }
 
+  // // sanity check: make sure all "change_music_sheet/turn page" events are valids
+  // // todo: rewrite this using the following code:
+  // // reason it is not used is that some version of g++ segfault when compiling this code.
+  // // therefore, check from time to time if an updated version of g++ fixed this bug.
+  // const auto is_missing_svgs = std::any_of(res.events.cbegin(), res.events.cend(), [=] (const auto& ev) {
+  //     return ((ev.sheet_events & has_event::svg_file_change) != 0) and (ev.new_svg_file >= nb_svg_files);
+  //   });
+  // if (is_missing_svgs)
+  // {
+  //   throw std::runtime_error("Error: the file is missing some pages of the music sheet inside");
+  // }
+  for (const auto& elt : res.events)
+  {
+    if (((elt.sheet_events & has_event::svg_file_change) != 0) and
+	(elt.new_svg_file >= nb_svg_files))
+    {
+      throw std::runtime_error("Error: the file is missing some pages of the music sheet inside");
+    }
+  }
+
   // sanity check: file must have been entirely read by now (no more remaining
   // bytes)
   file.peek(); // just to set the eof bit.
