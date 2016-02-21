@@ -73,13 +73,21 @@ void MainWindow::display_music_sheet(const unsigned music_sheet_pos)
 
   if (this->song.svg_files.size() <= music_sheet_pos)
   {
-    throw std::runtime_error("Invalid file format: it doesn't have enough music sheets");
+    throw std::runtime_error("Invalid file format: it doesn't have enough music sheets.\n"
+			     "This should have been prevented from happening while reading the input file.");
   }
 
   const auto& this_sheet = this->song.svg_files[music_sheet_pos];
   const QByteArray music_sheet (static_cast<const char*>(static_cast<const void*>(this_sheet.data.data())),
 				static_cast<int>(this_sheet.data.size()));
-  this->renderer.load(music_sheet);
+
+  const auto is_load_successfull = this->renderer.load(music_sheet);
+  if (not is_load_successfull)
+  {
+    throw std::runtime_error("Invalid file format: failed to parse a music sheet page.\n"
+			     "This should have been prevented from happening while reading the input file.");
+  }
+
 
   auto sheet = new QGraphicsSvgItem;
   sheet->setSharedRenderer(&renderer);

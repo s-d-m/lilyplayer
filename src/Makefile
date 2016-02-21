@@ -4,7 +4,7 @@ include Makefile.vars
 TARGET_DIR := ../bin
 TARGET := ${TARGET_DIR}/lilyplayer
 
-LIBS += -lrtmidi -lpugixml
+LIBS += -lrtmidi
 
 LIBS += ${QT_LIBS}
 DEFINES += ${QT_DEFINES}

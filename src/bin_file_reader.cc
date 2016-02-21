@@ -4,7 +4,8 @@
 #include <algorithm>
 #include <cstring> // for std::memcmp
 
-#include <pugixml.hpp>
+#include <QSvgRenderer> // to ensure reading the svg files won't cause any problem
+
 #include "bin_file_reader.hh"
 #include "utils.hh"
 
@@ -231,15 +232,15 @@ bin_song_t get_song(const std::string& filename)
   // sanity check: make sure parsing the svg_files won't cause any problem
   for (auto i = decltype(nb_svg_files){0}; i < nb_svg_files; ++i)
   {
-    pugi::xml_document doc;
-    // the parse_eol option replaces \r\n and single \r by \n
-    const auto svg_ptr = res.svg_files[i].data.data();
-    const auto parse_result = doc.load_buffer(svg_ptr, res.svg_files[i].data.size(), pugi::parse_minimal | pugi::parse_eol);
-    if (parse_result.status not_eq pugi::status_ok)
+    const QByteArray sheet (static_cast<const char*>(static_cast<const void*>(res.svg_files[i].data.data())),
+			    static_cast<int>(res.svg_files[i].data.size()));
+
+    QSvgRenderer renderer;
+    const auto is_load_successfull = renderer.load(sheet);
+    if (not is_load_successfull)
     {
       throw std::runtime_error(std::string{"Error: Failed to read svg file "} +
-			       std::to_string(static_cast<long unsigned int>(i)) + ": "
-			       + parse_result.description() + "\n");
+			       std::to_string(static_cast<long unsigned int>(i)));
     }
   }
 
