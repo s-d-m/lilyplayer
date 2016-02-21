@@ -204,9 +204,7 @@ void MainWindow::open_file(const std::string& filename)
 
 void MainWindow::open_file()
 {
-  QStringList filters;
-  filters << "Midi files (*.midi *.mid)"
-  	  << "Any files (*)";
+  const QStringList filters { "Binary files (*.bin)", "Any files (*)"};
 
   QFileDialog dialog;
   dialog.setFileMode(QFileDialog::ExistingFile);
