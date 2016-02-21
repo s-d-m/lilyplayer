@@ -71,26 +71,23 @@ void MainWindow::display_music_sheet(const unsigned music_sheet_pos)
   // remove all the music sheets
   music_sheet_scene->clear();
 
-  if (this->song.svg_files.size() <= music_sheet_pos)
+  const auto nb_svg = this->song.svg_files.size();
+  const auto nb_rendered = rendered_sheets.size();
+
+  if (nb_svg != nb_rendered)
+  {
+    throw std::runtime_error("Invalid state detected. The numbered of rendered file should match the number"
+			     " of svg files");
+  }
+
+  if (music_sheet_pos >= nb_rendered)
   {
     throw std::runtime_error("Invalid file format: it doesn't have enough music sheets.\n"
 			     "This should have been prevented from happening while reading the input file.");
   }
 
-  const auto& this_sheet = this->song.svg_files[music_sheet_pos];
-  const QByteArray music_sheet (static_cast<const char*>(static_cast<const void*>(this_sheet.data.data())),
-				static_cast<int>(this_sheet.data.size()));
-
-  const auto is_load_successfull = this->renderer.load(music_sheet);
-  if (not is_load_successfull)
-  {
-    throw std::runtime_error("Invalid file format: failed to parse a music sheet page.\n"
-			     "This should have been prevented from happening while reading the input file.");
-  }
-
-
   auto sheet = new QGraphicsSvgItem;
-  sheet->setSharedRenderer(&renderer);
+  sheet->setSharedRenderer(rendered_sheets[music_sheet_pos]);
   sheet->setFlags(QGraphicsItem::ItemClipsToShape);
   sheet->setCacheMode(QGraphicsItem::NoCache);
   sheet->setZValue(0);
@@ -150,6 +147,11 @@ void MainWindow::song_event_loop()
 void MainWindow::stop_song()
 {
   music_sheet_scene->clear();
+  for (auto sheet : rendered_sheets)
+  {
+    delete sheet;
+  }
+  rendered_sheets.clear();
 
   {
     // just close the output ports, and reopens it. This avoids getting a 'buzzing' noise
@@ -188,6 +190,29 @@ void MainWindow::open_file(const std::string& filename)
     this->song_pos = 0;
     sound_listener.closePort();
     this->selected_input.clear();
+
+    const auto nb_svg = song.svg_files.size();
+    if (rendered_sheets.size() != 0)
+    {
+	throw std::runtime_error("Invalid state detected. There should be no rendered_sheets.");
+    }
+
+    for (unsigned int i = 0; i < nb_svg; ++i)
+    {
+      const auto& this_sheet = this->song.svg_files[i];
+      const QByteArray music_sheet (static_cast<const char*>(static_cast<const void*>(this_sheet.data.data())),
+				    static_cast<int>(this_sheet.data.size()));
+
+      auto current_renderer = new QSvgRenderer;
+      const auto is_load_successfull = current_renderer->load(music_sheet);
+      if (not is_load_successfull)
+      {
+	throw std::runtime_error("Invalid file format: failed to parse a music sheet page.");
+      }
+
+      rendered_sheets.push_back(current_renderer);
+    }
+
 
     display_music_sheet(0);
   }
@@ -501,7 +526,7 @@ MainWindow::MainWindow(QWidget *parent) :
   keyboard_scene(new QGraphicsScene(this)),
   keyboard(),
   music_sheet_scene(new QGraphicsScene(this)),
-  renderer(),
+  rendered_sheets(),
   signal_checker_timer(),
   song(),
   sound_player(RtMidi::LINUX_ALSA),
@@ -583,6 +608,7 @@ MainWindow::MainWindow(QWidget *parent) :
 
 MainWindow::~MainWindow()
 {
+  stop_song();
   delete ui;
   sound_player.closePort();
 }
