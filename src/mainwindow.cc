@@ -173,7 +173,7 @@ void MainWindow::stop_song()
   // reinitialise the song field
   this->song = bin_song_t();
   this->song_pos = INVALID_SONG_POS;
-  this->is_in_pause = false;
+  this->is_in_pause = true;
 
   // reset all keys to up on the keyboard (doesn't play key_released events).
   reset_color(keyboard);
@@ -213,8 +213,8 @@ void MainWindow::open_file(const std::string& filename)
       rendered_sheets.push_back(current_renderer);
     }
 
-
     display_music_sheet(0);
+    is_in_pause = false;
   }
   catch (std::exception& e)
   {

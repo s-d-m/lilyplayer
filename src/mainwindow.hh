@@ -78,8 +78,8 @@ class MainWindow : public QMainWindow
     RtMidiIn  sound_listener;
     std::string selected_output_port = "";
     std::string selected_input = "";
-    unsigned int song_pos = INVALID_SONG_POS;
-    bool is_in_pause = false;
+    volatile unsigned int song_pos = INVALID_SONG_POS;
+    volatile bool is_in_pause = true;
 };
 
 #pragma GCC diagnostic pop
