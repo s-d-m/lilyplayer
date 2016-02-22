@@ -3,6 +3,7 @@
 #include <QFileDialog>
 #include <QMessageBox>
 #include <QKeyEvent>
+#include <QGraphicsSvgItem>
 #include "mainwindow.hh"
 #include "ui_mainwindow.hh"
 
@@ -56,7 +57,7 @@ void MainWindow::process_keyboard_event(const std::vector<key_down>& keys_down,
 					const std::vector<midi_message_t>& messages)
 {
   update_keyboard(keys_down, keys_up, this->keyboard);
-  draw_keyboard(*(this->scene), this->keyboard);
+  draw_keyboard(*(this->keyboard_scene), this->keyboard);
   this->update();
 
   for (auto message : messages)
@@ -65,10 +66,46 @@ void MainWindow::process_keyboard_event(const std::vector<key_down>& keys_down,
   }
 }
 
-void MainWindow::process_keyboard_event(const music_sheet_event& event)
+void MainWindow::display_music_sheet(const unsigned music_sheet_pos)
 {
+  // remove all the music sheets
+  music_sheet_scene->clear();
+
+  const auto nb_svg = this->song.svg_files.size();
+  const auto nb_rendered = rendered_sheets.size();
+
+  if (nb_svg != nb_rendered)
+  {
+    throw std::runtime_error("Invalid state detected. The numbered of rendered file should match the number"
+			     " of svg files");
+  }
+
+  if (music_sheet_pos >= nb_rendered)
+  {
+    throw std::runtime_error("Invalid file format: it doesn't have enough music sheets.\n"
+			     "This should have been prevented from happening while reading the input file.");
+  }
+
+  auto sheet = new QGraphicsSvgItem;
+  sheet->setSharedRenderer(rendered_sheets[music_sheet_pos]);
+  sheet->setFlags(QGraphicsItem::ItemClipsToShape);
+  sheet->setCacheMode(QGraphicsItem::NoCache);
+  sheet->setZValue(0);
+  music_sheet_scene->addItem(sheet);
+}
+
+void MainWindow::process_music_sheet_event(const music_sheet_event& event)
+{
+  // process the keyboard event. Must have one.
   const auto midi_messages = get_midi_from_keys_events(event.keys_down, event.keys_up);
   this->process_keyboard_event(event.keys_down, event.keys_up, midi_messages);
+
+  // is there a svg file change?
+  const auto has_svg_file_change = ((event.sheet_events & has_event::svg_file_change) != 0);
+  if (has_svg_file_change)
+  {
+    display_music_sheet(event.new_svg_file);
+  }
 }
 
 void MainWindow::song_event_loop()
@@ -90,7 +127,7 @@ void MainWindow::song_event_loop()
     throw std::runtime_error("Invalid song position found");
   }
 
-  process_keyboard_event( song.events[song_pos] );
+  process_music_sheet_event( song.events[song_pos] );
 
   if (song_pos + 1 == this->song.events.size())
   {
@@ -109,6 +146,13 @@ void MainWindow::song_event_loop()
 
 void MainWindow::stop_song()
 {
+  music_sheet_scene->clear();
+  for (auto sheet : rendered_sheets)
+  {
+    delete sheet;
+  }
+  rendered_sheets.clear();
+
   {
     // just close the output ports, and reopens it. This avoids getting a 'buzzing' noise
     // being played continuously through the speakers. It also avoids the need to create a
@@ -129,11 +173,11 @@ void MainWindow::stop_song()
   // reinitialise the song field
   this->song = bin_song_t();
   this->song_pos = INVALID_SONG_POS;
-  this->is_in_pause = false;
+  this->is_in_pause = true;
 
   // reset all keys to up on the keyboard (doesn't play key_released events).
   reset_color(keyboard);
-  draw_keyboard(*(this->scene), this->keyboard);
+  draw_keyboard(*(this->keyboard_scene), this->keyboard);
   this->update();
 }
 
@@ -146,6 +190,31 @@ void MainWindow::open_file(const std::string& filename)
     this->song_pos = 0;
     sound_listener.closePort();
     this->selected_input.clear();
+
+    const auto nb_svg = song.svg_files.size();
+    if (rendered_sheets.size() != 0)
+    {
+	throw std::runtime_error("Invalid state detected. There should be no rendered_sheets.");
+    }
+
+    for (unsigned int i = 0; i < nb_svg; ++i)
+    {
+      const auto& this_sheet = this->song.svg_files[i];
+      const QByteArray music_sheet (static_cast<const char*>(static_cast<const void*>(this_sheet.data.data())),
+				    static_cast<int>(this_sheet.data.size()));
+
+      auto current_renderer = new QSvgRenderer;
+      const auto is_load_successfull = current_renderer->load(music_sheet);
+      if (not is_load_successfull)
+      {
+	throw std::runtime_error("Invalid file format: failed to parse a music sheet page.");
+      }
+
+      rendered_sheets.push_back(current_renderer);
+    }
+
+    display_music_sheet(0);
+    is_in_pause = false;
   }
   catch (std::exception& e)
   {
@@ -154,14 +223,13 @@ void MainWindow::open_file(const std::string& filename)
 			  err_msg,
 			  QMessageBox::Ok,
 			  QMessageBox::Ok);
+    stop_song();
   }
 }
 
 void MainWindow::open_file()
 {
-  QStringList filters;
-  filters << "Midi files (*.midi *.mid)"
-  	  << "Any files (*)";
+  const QStringList filters { "Binary files (*.bin)", "Any files (*)"};
 
   QFileDialog dialog;
   dialog.setFileMode(QFileDialog::ExistingFile);
@@ -266,6 +334,13 @@ void MainWindow::update_output_ports()
     return;
   }
 
+  const auto nb_ports = sound_player.getPortCount();
+  if (nb_ports == 0)
+  {
+    std::cerr << "Sorry: can't populate menu, no output midi port found\n";
+    return;
+  }
+
   // remove all the children!
   menu_output_port->clear();
 
@@ -277,26 +352,17 @@ void MainWindow::update_output_ports()
     action_group = new QActionGroup( menu_output_port );
   }
 
-  const auto nb_ports = sound_player.getPortCount();
-  if (nb_ports == 0)
+  for (unsigned int i = 0; i < nb_ports; ++i)
   {
-    std::cerr << "Sorry: can't populate menu, no output midi port found\n";
-  }
-  else
-  {
-    for (unsigned int i = 0; i < nb_ports; ++i)
-    {
-      const auto port_name = sound_player.getPortName(i);
-      const auto label = QString::fromStdString( port_name );
-      auto button = menu_output_port->addAction(label);
-      button->setCheckable(true);
-      const auto select_this_port = ( port_name == selected_output_port );
-      button->setChecked( select_this_port );
+    const auto port_name = sound_player.getPortName(i);
+    const auto label = QString::fromStdString( port_name );
+    auto button = menu_output_port->addAction(label);
+    button->setCheckable(true);
+    const auto select_this_port = ( port_name == selected_output_port );
+    button->setChecked( select_this_port );
 
-      button->setActionGroup( action_group );
-      connect(button, SIGNAL(triggered()), this, SLOT(output_port_change()));
-    }
-
+    button->setActionGroup( action_group );
+    connect(button, SIGNAL(triggered()), this, SLOT(output_port_change()));
   }
 }
 
@@ -457,8 +523,10 @@ void MainWindow::update_input_entries()
 MainWindow::MainWindow(QWidget *parent) :
   QMainWindow(parent),
   ui(new Ui::MainWindow),
-  scene(new QGraphicsScene(this)),
+  keyboard_scene(new QGraphicsScene(this)),
   keyboard(),
+  music_sheet_scene(new QGraphicsScene(this)),
+  rendered_sheets(),
   signal_checker_timer(),
   song(),
   sound_player(RtMidi::LINUX_ALSA),
@@ -466,8 +534,10 @@ MainWindow::MainWindow(QWidget *parent) :
 {
   ui->setupUi(this);
   ui->keyboard->setRenderHints(QPainter::Antialiasing | QPainter::SmoothPixmapTransform);
-  ui->keyboard->setScene(scene);
-  draw_keyboard(*scene, this->keyboard);
+  ui->keyboard->setScene(keyboard_scene);
+  draw_keyboard(*keyboard_scene, this->keyboard);
+
+  ui->music_sheet->setScene(music_sheet_scene);
 
   connect(&signal_checker_timer, SIGNAL(timeout()), this, SLOT(look_for_signals_change()));
   signal_checker_timer.start(100 /* ms */);
@@ -538,6 +608,7 @@ MainWindow::MainWindow(QWidget *parent) :
 
 MainWindow::~MainWindow()
 {
+  stop_song();
   delete ui;
   sound_player.closePort();
 }

@@ -6,6 +6,7 @@
 
 #include <QGraphicsView>
 #include <QGraphicsItem>
+#include <QSvgRenderer>
 
 #include <QTimer>
 
@@ -26,6 +27,8 @@ namespace Ui {
   class MainWindow;
 }
 
+class QGraphicsSvgItem;
+
 class MainWindow : public QMainWindow
 {
     Q_OBJECT
@@ -39,7 +42,8 @@ class MainWindow : public QMainWindow
 
   private:
     void stop_song();
-    void process_keyboard_event(const music_sheet_event& keys_event);
+    void process_music_sheet_event(const music_sheet_event& keys_event);
+    void display_music_sheet(const unsigned music_sheet_pos);
     void keyPressEvent(QKeyEvent * event);
     static void on_midi_input(double timestamp __attribute__((unused)), std::vector<unsigned char> *message, void* param);
     void process_keyboard_event(const std::vector<key_down>& keys_down,
@@ -64,16 +68,18 @@ class MainWindow : public QMainWindow
     static constexpr unsigned int INVALID_SONG_POS = std::numeric_limits<unsigned int>::max();
 
     Ui::MainWindow *ui;
-    QGraphicsScene *scene;
+    QGraphicsScene *keyboard_scene;
     struct keys_color keyboard;
+    QGraphicsScene *music_sheet_scene;
+    std::vector<QSvgRenderer*> rendered_sheets;
     QTimer signal_checker_timer;
     bin_song_t song;
     RtMidiOut sound_player;
     RtMidiIn  sound_listener;
     std::string selected_output_port = "";
     std::string selected_input = "";
-    unsigned int song_pos = INVALID_SONG_POS;
-    bool is_in_pause = false;
+    volatile unsigned int song_pos = INVALID_SONG_POS;
+    volatile bool is_in_pause = true;
 };
 
 #pragma GCC diagnostic pop

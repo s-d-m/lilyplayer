@@ -4,7 +4,8 @@
 #include <algorithm>
 #include <cstring> // for std::memcmp
 
-#include <pugixml.hpp>
+#include <QSvgRenderer> // to ensure reading the svg files won't cause any problem
+
 #include "bin_file_reader.hh"
 #include "utils.hh"
 
@@ -80,15 +81,14 @@ music_sheet_event read_grouped_event(std::fstream& file)
       {
 	const auto pitch = read_big_endian<uint8_t>(file);
 	const auto staff_number = read_big_endian<uint8_t>(file);
-	res.keys_down.emplace_back( key_down{ .pitch = pitch,
-				              .staff_num = staff_number });
+	res.keys_down.emplace_back( key_down{pitch,  staff_number} );
 	break;
       }
 
       case event_type::release_key:
       {
 	const auto pitch = read_big_endian<uint8_t>(file);
-	res.keys_up.emplace_back( key_up{ .pitch = pitch });
+	res.keys_up.emplace_back( key_up{ pitch });
 	break;
       }
 
@@ -231,15 +231,35 @@ bin_song_t get_song(const std::string& filename)
   // sanity check: make sure parsing the svg_files won't cause any problem
   for (auto i = decltype(nb_svg_files){0}; i < nb_svg_files; ++i)
   {
-    pugi::xml_document doc;
-    // the parse_eol option replaces \r\n and single \r by \n
-    const auto svg_ptr = res.svg_files[i].data.data();
-    const auto parse_result = doc.load_buffer(svg_ptr, res.svg_files[i].data.size(), pugi::parse_minimal | pugi::parse_eol);
-    if (parse_result.status not_eq pugi::status_ok)
+    const QByteArray sheet (static_cast<const char*>(static_cast<const void*>(res.svg_files[i].data.data())),
+			    static_cast<int>(res.svg_files[i].data.size()));
+
+    QSvgRenderer renderer;
+    const auto is_load_successfull = renderer.load(sheet);
+    if (not is_load_successfull)
     {
       throw std::runtime_error(std::string{"Error: Failed to read svg file "} +
-			       std::to_string(static_cast<long unsigned int>(i)) + ": "
-			       + parse_result.description() + "\n");
+			       std::to_string(static_cast<long unsigned int>(i)));
+    }
+  }
+
+  // // sanity check: make sure all "change_music_sheet/turn page" events are valids
+  // // todo: rewrite this using the following code:
+  // // reason it is not used is that some version of g++ segfault when compiling this code.
+  // // therefore, check from time to time if an updated version of g++ fixed this bug.
+  // const auto is_missing_svgs = std::any_of(res.events.cbegin(), res.events.cend(), [=] (const auto& ev) {
+  //     return ((ev.sheet_events & has_event::svg_file_change) != 0) and (ev.new_svg_file >= nb_svg_files);
+  //   });
+  // if (is_missing_svgs)
+  // {
+  //   throw std::runtime_error("Error: the file is missing some pages of the music sheet inside");
+  // }
+  for (const auto& elt : res.events)
+  {
+    if (((elt.sheet_events & has_event::svg_file_change) != 0) and
+	(elt.new_svg_file >= nb_svg_files))
+    {
+      throw std::runtime_error("Error: the file is missing some pages of the music sheet inside");
     }
   }
 

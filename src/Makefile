@@ -4,7 +4,7 @@ include Makefile.vars
 TARGET_DIR := ../bin
 TARGET := ${TARGET_DIR}/lilyplayer
 
-LIBS += -lrtmidi -lpugixml
+LIBS += -lrtmidi
 
 LIBS += ${QT_LIBS}
 DEFINES += ${QT_DEFINES}
@@ -157,7 +157,7 @@ BUILD ?= debug
 CXXFLAGS = -std=c++14 -Werror -fPIC ${CXX_WARN_FLAGS} ${SANITIZERS} ${DEFINES}
 
 ifeq ($(BUILD),release)
-  CXXFLAGS += -O3 -flto
+  CXXFLAGS += -O3
 else
   CXXFLAGS += -O0 -ggdb3
 endif
