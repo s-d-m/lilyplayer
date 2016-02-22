@@ -157,7 +157,7 @@ BUILD ?= debug
 CXXFLAGS = -std=c++14 -Werror -fPIC ${CXX_WARN_FLAGS} ${SANITIZERS} ${DEFINES}
 
 ifeq ($(BUILD),release)
-  CXXFLAGS += -O3 -flto
+  CXXFLAGS += -O3
 else
   CXXFLAGS += -O0 -ggdb3
 endif
