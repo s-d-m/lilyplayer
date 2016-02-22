@@ -1,6 +1,7 @@
 #ifndef MAINWINDOW_HH
 #define MAINWINDOW_HH
 
+#include <atomic>
 #include <QMainWindow>
 #include <QGraphicsScene>
 
@@ -79,7 +80,7 @@ class MainWindow : public QMainWindow
     std::string selected_output_port = "";
     std::string selected_input = "";
     volatile unsigned int song_pos = INVALID_SONG_POS;
-    volatile bool is_in_pause = true;
+    std::atomic<bool> is_in_pause;
 };
 
 #pragma GCC diagnostic pop

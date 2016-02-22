@@ -110,17 +110,18 @@ void MainWindow::process_music_sheet_event(const music_sheet_event& event)
 
 void MainWindow::song_event_loop()
 {
+  if (is_in_pause.load())
+  {
+    QTimer::singleShot(100, this, SLOT(song_event_loop()));
+    return;
+  }
+
   if (song_pos == INVALID_SONG_POS)
   {
     QTimer::singleShot(100, this, SLOT(song_event_loop()));
     return;
   }
 
-  if (is_in_pause)
-  {
-    QTimer::singleShot(100, this, SLOT(song_event_loop()));
-    return;
-  }
 
   if ((song_pos != 0) and (song_pos >= this->song.events.size()))
   {
@@ -146,6 +147,8 @@ void MainWindow::song_event_loop()
 
 void MainWindow::stop_song()
 {
+  this->is_in_pause = true;
+
   music_sheet_scene->clear();
   for (auto sheet : rendered_sheets)
   {
@@ -173,7 +176,6 @@ void MainWindow::stop_song()
   // reinitialise the song field
   this->song = bin_song_t();
   this->song_pos = INVALID_SONG_POS;
-  this->is_in_pause = true;
 
   // reset all keys to up on the keyboard (doesn't play key_released events).
   reset_color(keyboard);
@@ -530,8 +532,11 @@ MainWindow::MainWindow(QWidget *parent) :
   signal_checker_timer(),
   song(),
   sound_player(RtMidi::LINUX_ALSA),
-  sound_listener(RtMidi::LINUX_ALSA)
+  sound_listener(RtMidi::LINUX_ALSA),
+  is_in_pause()
 {
+  atomic_init(&is_in_pause, true);
+
   ui->setupUi(this);
   ui->keyboard->setRenderHints(QPainter::Antialiasing | QPainter::SmoothPixmapTransform);
   ui->keyboard->setScene(keyboard_scene);
