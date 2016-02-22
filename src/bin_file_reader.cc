@@ -81,15 +81,14 @@ music_sheet_event read_grouped_event(std::fstream& file)
       {
 	const auto pitch = read_big_endian<uint8_t>(file);
 	const auto staff_number = read_big_endian<uint8_t>(file);
-	res.keys_down.emplace_back( key_down{ .pitch = pitch,
-				              .staff_num = staff_number });
+	res.keys_down.emplace_back( key_down{pitch,  staff_number} );
 	break;
       }
 
       case event_type::release_key:
       {
 	const auto pitch = read_big_endian<uint8_t>(file);
-	res.keys_up.emplace_back( key_up{ .pitch = pitch });
+	res.keys_up.emplace_back( key_up{ pitch });
 	break;
       }
 
