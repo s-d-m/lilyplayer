@@ -150,9 +150,10 @@ void MainWindow::stop_song()
   this->is_in_pause = true;
 
   music_sheet_scene->clear();
-  for (auto sheet : rendered_sheets)
+  const auto nb_rendered = rendered_sheets.size();
+  for (auto i = decltype(nb_rendered){0}; i < nb_rendered; ++i)
   {
-    delete sheet;
+    delete rendered_sheets[i];
   }
   rendered_sheets.clear();
 
