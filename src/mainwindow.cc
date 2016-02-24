@@ -4,6 +4,7 @@
 #include <QMessageBox>
 #include <QKeyEvent>
 #include <QGraphicsSvgItem>
+#include <QGraphicsRectItem>
 #include "mainwindow.hh"
 #include "ui_mainwindow.hh"
 
@@ -105,6 +106,22 @@ void MainWindow::process_music_sheet_event(const music_sheet_event& event)
   if (has_svg_file_change)
   {
     display_music_sheet(event.new_svg_file);
+  }
+
+  // is there a cursor pos change here?
+  const auto has_cursor_pos_change = ((event.sheet_events & has_event::cursor_pos_change) != 0);
+  if (has_cursor_pos_change)
+  {
+    const auto& cursor_box = event.new_cursor_box;
+    const auto top = static_cast<qreal>(cursor_box.top) / 10000;
+    const auto left = static_cast<qreal>(cursor_box.left) / 10000;
+    const auto width = static_cast<qreal>(cursor_box.right / 10000) - left;
+    const auto height = static_cast<qreal>(cursor_box.bottom / 10000) - top;
+    auto rect = new QGraphicsRectItem { left, top, width, height };
+    rect->setFlags(QGraphicsItem::ItemClipsToShape);
+    rect->setCacheMode(QGraphicsItem::NoCache);
+    rect->setZValue(1);
+    music_sheet_scene->addItem(rect);
   }
 }
 
