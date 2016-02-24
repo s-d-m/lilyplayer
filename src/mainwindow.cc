@@ -72,6 +72,14 @@ void MainWindow::display_music_sheet(const unsigned music_sheet_pos)
   // remove all the music sheets
   music_sheet_scene->clear();
 
+  // if there was a cursor rect in the music_sheet_scene, the clear()
+  // would have called the cursor rect destructor
+  cursor_rect = new QGraphicsRectItem();
+  cursor_rect->setFlags(QGraphicsItem::ItemClipsToShape);
+  cursor_rect->setCacheMode(QGraphicsItem::NoCache);
+  cursor_rect->setZValue(1);
+  music_sheet_scene->addItem(cursor_rect);
+
   const auto nb_svg = this->song.svg_files.size();
   const auto nb_rendered = rendered_sheets.size();
 
@@ -117,11 +125,8 @@ void MainWindow::process_music_sheet_event(const music_sheet_event& event)
     const auto left = static_cast<qreal>(cursor_box.left) / 10000;
     const auto width = static_cast<qreal>(cursor_box.right / 10000) - left;
     const auto height = static_cast<qreal>(cursor_box.bottom / 10000) - top;
-    auto rect = new QGraphicsRectItem { left, top, width, height };
-    rect->setFlags(QGraphicsItem::ItemClipsToShape);
-    rect->setCacheMode(QGraphicsItem::NoCache);
-    rect->setZValue(1);
-    music_sheet_scene->addItem(rect);
+
+    cursor_rect->setRect( left, top, width, height );
   }
 }
 
@@ -547,6 +552,7 @@ MainWindow::MainWindow(QWidget *parent) :
   keyboard(),
   music_sheet_scene(new QGraphicsScene(this)),
   rendered_sheets(),
+  cursor_rect(nullptr),
   signal_checker_timer(),
   song(),
   sound_player(RtMidi::LINUX_ALSA),
