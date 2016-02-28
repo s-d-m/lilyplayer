@@ -74,7 +74,8 @@ class MainWindow : public QMainWindow
     struct keys_color keyboard;
     QGraphicsScene *music_sheet_scene;
     std::vector<QSvgRenderer*> rendered_sheets;
-    QGraphicsRectItem* cursor_rect;
+    QSvgRenderer* cursor_rect;
+    QGraphicsSvgItem* svg_rect;
     QTimer signal_checker_timer;
     bin_song_t song;
     RtMidiOut sound_player;

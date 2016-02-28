@@ -72,14 +72,6 @@ void MainWindow::display_music_sheet(const unsigned music_sheet_pos)
   // remove all the music sheets
   music_sheet_scene->clear();
 
-  // if there was a cursor rect in the music_sheet_scene, the clear()
-  // would have called the cursor rect destructor
-  cursor_rect = new QGraphicsRectItem();
-  cursor_rect->setFlags(QGraphicsItem::ItemClipsToShape);
-  cursor_rect->setCacheMode(QGraphicsItem::NoCache);
-  cursor_rect->setZValue(1);
-  music_sheet_scene->addItem(cursor_rect);
-
   const auto nb_svg = this->song.svg_files.size();
   const auto nb_rendered = rendered_sheets.size();
 
@@ -101,6 +93,14 @@ void MainWindow::display_music_sheet(const unsigned music_sheet_pos)
   sheet->setCacheMode(QGraphicsItem::NoCache);
   sheet->setZValue(0);
   music_sheet_scene->addItem(sheet);
+
+  // if there was a rectangle displayed the clear function would have called the destructor
+  svg_rect = new QGraphicsSvgItem;
+  svg_rect->setFlags(QGraphicsItem::ItemClipsToShape);
+  svg_rect->setCacheMode(QGraphicsItem::NoCache);
+  svg_rect->setZValue(1);
+  music_sheet_scene->addItem(svg_rect);
+
 }
 
 void MainWindow::process_music_sheet_event(const music_sheet_event& event)
@@ -121,12 +121,27 @@ void MainWindow::process_music_sheet_event(const music_sheet_event& event)
   if (has_cursor_pos_change)
   {
     const auto& cursor_box = event.new_cursor_box;
-    const auto top = static_cast<qreal>(cursor_box.top) / 10000;
-    const auto left = static_cast<qreal>(cursor_box.left) / 10000;
-    const auto width = static_cast<qreal>(cursor_box.right / 10000) - left;
-    const auto height = static_cast<qreal>(cursor_box.bottom / 10000) - top;
+    const auto top = cursor_box.top;
+    const auto left = cursor_box.left;
+    const auto width = cursor_box.right - left;
+    const auto height = cursor_box.bottom - top;
 
-    cursor_rect->setRect( left, top, width, height );
+    const auto to_dotted_str = [] (const auto num) {
+      return std::to_string(num / 10000) + "." + std::to_string(num % 10000);
+    };
+
+    const auto str = std::string{"<svg xmlns=\"http://www.w3.org/2000/svg\" "
+				 "xmlns:xlink=\"http://www.w3.org/1999/xlink\" "
+				 "version=\"1.2\" width=\"210.00mm\" height=\"297.00mm\" "
+				 "viewBox=\"0 0 119.5016 169.0094\">"}
+			         + "<rect x=\"" + to_dotted_str(left) + "\" y=\"" + to_dotted_str(top) + "\" width=\""
+				   + to_dotted_str(width) + "\" height=\"" + to_dotted_str(height)
+				   + "\" ry=\"0.0000\" fill=\"currentColor\"/></svg>";
+
+    QByteArray svg_str_rectangle (str.c_str());
+    cursor_rect->load(svg_str_rectangle);
+    svg_rect->setSharedRenderer( cursor_rect );
+
   }
 }
 
@@ -222,6 +237,7 @@ void MainWindow::open_file(const std::string& filename)
 	throw std::runtime_error("Invalid state detected. There should be no rendered_sheets.");
     }
 
+    // pre-render each svg files first, so when there will be a turn page event, it is already parsed.
     for (unsigned int i = 0; i < nb_svg; ++i)
     {
       const auto& this_sheet = this->song.svg_files[i];
@@ -237,6 +253,8 @@ void MainWindow::open_file(const std::string& filename)
 
       rendered_sheets.push_back(current_renderer);
     }
+
+    cursor_rect = new QSvgRenderer;
 
     display_music_sheet(0);
     is_in_pause = false;
@@ -553,6 +571,7 @@ MainWindow::MainWindow(QWidget *parent) :
   music_sheet_scene(new QGraphicsScene(this)),
   rendered_sheets(),
   cursor_rect(nullptr),
+  svg_rect(nullptr),
   signal_checker_timer(),
   song(),
   sound_player(RtMidi::LINUX_ALSA),
