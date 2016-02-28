@@ -136,7 +136,7 @@ void MainWindow::process_music_sheet_event(const music_sheet_event& event)
 				 "viewBox=\"0 0 119.5016 169.0094\">"}
 			         + "<rect x=\"" + to_dotted_str(left) + "\" y=\"" + to_dotted_str(top) + "\" width=\""
 				   + to_dotted_str(width) + "\" height=\"" + to_dotted_str(height)
-				   + "\" ry=\"0.0000\" fill=\"currentColor\"/></svg>";
+				   + "\" ry=\"0.0000\" fill=\"currentColor\" fill-opacity=\"0.4\"/></svg>";
 
     QByteArray svg_str_rectangle (str.c_str());
     cursor_rect->load(svg_str_rectangle);
