@@ -270,9 +270,10 @@ void MainWindow::open_file(const std::string& filename)
   catch (std::exception& e)
   {
     // delete already rendered sheets
-    for (auto& elt : rendered_sheets)
+    const auto nb_elts = rendered_sheets.size();
+    for (unsigned i = 0; i < nb_elts; ++i)
     {
-      delete elt.rendered;
+      delete rendered_sheets[i].rendered;
     }
     rendered_sheets.clear();
 
