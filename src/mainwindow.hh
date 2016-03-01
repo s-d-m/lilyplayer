@@ -83,6 +83,7 @@ class MainWindow : public QMainWindow
     std::vector<sheet_property> rendered_sheets;
     QSvgRenderer* cursor_rect;
     QGraphicsSvgItem* svg_rect;
+    std::string current_svg_first_line;
     QTimer signal_checker_timer;
     bin_song_t song;
     RtMidiOut sound_player;

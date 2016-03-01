@@ -101,6 +101,7 @@ void MainWindow::display_music_sheet(const unsigned music_sheet_pos)
   svg_rect->setZValue(1);
   music_sheet_scene->addItem(svg_rect);
 
+  current_svg_first_line = rendered_sheets[music_sheet_pos].svg_first_line;
 }
 
 void MainWindow::process_music_sheet_event(const music_sheet_event& event)
@@ -130,13 +131,10 @@ void MainWindow::process_music_sheet_event(const music_sheet_event& event)
       return std::to_string(num / 10000) + "." + std::to_string(num % 10000);
     };
 
-    const auto str = std::string{"<svg xmlns=\"http://www.w3.org/2000/svg\" "
-				 "xmlns:xlink=\"http://www.w3.org/1999/xlink\" "
-				 "version=\"1.2\" width=\"210.00mm\" height=\"297.00mm\" "
-				 "viewBox=\"0 0 119.5016 169.0094\">"}
-			         + "<rect x=\"" + to_dotted_str(left) + "\" y=\"" + to_dotted_str(top) + "\" width=\""
-				   + to_dotted_str(width) + "\" height=\"" + to_dotted_str(height)
-				   + "\" ry=\"0.0000\" fill=\"currentColor\" fill-opacity=\"0.4\"/></svg>";
+    const auto str = current_svg_first_line
+		     + "<rect x=\"" + to_dotted_str(left) + "\" y=\"" + to_dotted_str(top) + "\" width=\""
+		     + to_dotted_str(width) + "\" height=\"" + to_dotted_str(height)
+		     + "\" ry=\"0.0000\" fill=\"currentColor\" fill-opacity=\"0.4\"/></svg>";
 
     QByteArray svg_str_rectangle (str.c_str());
     cursor_rect->load(svg_str_rectangle);
@@ -589,6 +587,7 @@ MainWindow::MainWindow(QWidget *parent) :
   rendered_sheets(),
   cursor_rect(nullptr),
   svg_rect(nullptr),
+  current_svg_first_line(),
   signal_checker_timer(),
   song(),
   sound_player(RtMidi::LINUX_ALSA),
