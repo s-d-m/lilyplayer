@@ -88,7 +88,7 @@ void MainWindow::display_music_sheet(const unsigned music_sheet_pos)
   }
 
   auto sheet = new QGraphicsSvgItem;
-  sheet->setSharedRenderer(rendered_sheets[music_sheet_pos]);
+  sheet->setSharedRenderer(rendered_sheets[music_sheet_pos].rendered);
   sheet->setFlags(QGraphicsItem::ItemClipsToShape);
   sheet->setCacheMode(QGraphicsItem::NoCache);
   sheet->setZValue(0);
@@ -190,7 +190,7 @@ void MainWindow::stop_song()
   const auto nb_rendered = rendered_sheets.size();
   for (auto i = decltype(nb_rendered){0}; i < nb_rendered; ++i)
   {
-    delete rendered_sheets[i];
+    delete rendered_sheets[i].rendered;
   }
   rendered_sheets.clear();
 
@@ -241,17 +241,27 @@ void MainWindow::open_file(const std::string& filename)
     for (unsigned int i = 0; i < nb_svg; ++i)
     {
       const auto& this_sheet = this->song.svg_files[i];
-      const QByteArray music_sheet (static_cast<const char*>(static_cast<const void*>(this_sheet.data.data())),
-				    static_cast<int>(this_sheet.data.size()));
+      const char* const sheet_data = static_cast<const char*>(static_cast<const void*>(this_sheet.data.data()));
+      const auto sheet_size = this_sheet.data.size();
+      const QByteArray music_sheet (sheet_data, static_cast<int>(sheet_size));
 
       auto current_renderer = new QSvgRenderer;
       const auto is_load_successfull = current_renderer->load(music_sheet);
       if (not is_load_successfull)
       {
+	delete current_renderer;
 	throw std::runtime_error("Invalid file format: failed to parse a music sheet page.");
       }
 
-      rendered_sheets.push_back(current_renderer);
+      // load is successful, so it is a proper svg file, so let's find the first line
+      unsigned closing_angle_pos = 0;
+      while ((closing_angle_pos < sheet_size) and (sheet_data[closing_angle_pos] != '>'))
+      {
+	closing_angle_pos++;
+      }
+
+      rendered_sheets.emplace_back(sheet_property{ current_renderer,
+						   std::string{ sheet_data, closing_angle_pos + 1 } });
     }
 
     cursor_rect = new QSvgRenderer;
@@ -261,6 +271,13 @@ void MainWindow::open_file(const std::string& filename)
   }
   catch (std::exception& e)
   {
+    // delete already rendered sheets
+    for (auto& elt : rendered_sheets)
+    {
+      delete elt.rendered;
+    }
+    rendered_sheets.clear();
+
     const auto err_msg = e.what();
     QMessageBox::critical(this, tr("Failed to open file."),
 			  err_msg,
