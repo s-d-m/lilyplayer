@@ -29,6 +29,7 @@ namespace Ui {
 }
 
 class QGraphicsSvgItem;
+class QGraphicsRectItem;
 
 class MainWindow : public QMainWindow
 {
@@ -68,11 +69,21 @@ class MainWindow : public QMainWindow
   private:
     static constexpr unsigned int INVALID_SONG_POS = std::numeric_limits<unsigned int>::max();
 
+  private:
+    struct sheet_property
+    {
+	QSvgRenderer* rendered;
+	std::string svg_first_line;
+    };
+
     Ui::MainWindow *ui;
     QGraphicsScene *keyboard_scene;
     struct keys_color keyboard;
     QGraphicsScene *music_sheet_scene;
-    std::vector<QSvgRenderer*> rendered_sheets;
+    std::vector<sheet_property> rendered_sheets;
+    QSvgRenderer* cursor_rect;
+    QGraphicsSvgItem* svg_rect;
+    std::string current_svg_first_line;
     QTimer signal_checker_timer;
     bin_song_t song;
     RtMidiOut sound_player;

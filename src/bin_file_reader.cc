@@ -116,6 +116,20 @@ music_sheet_event read_grouped_event(std::fstream& file)
 	const auto top = read_big_endian<uint32_t>(file);
 	const auto bottom = read_big_endian<uint32_t>(file);
 
+	// sanity check: the binary file format uses top, left, bottom, right coordinates.
+	// ensures that for all cursors, top < bottom, and left < right. Point (0,0) is top left.
+	// this is to ensure that computing width and height won't overflow.
+	if (left >= right) // left and right are not allowed to be equal as it would mean a box of width 0, so invisible.
+	{
+	  throw std::invalid_argument("Error: invalid values for left and right position in a cursor box");
+	}
+
+	if (top >= bottom) // top and bottom are not allowed to be equal as it would mean a box of height 0, so invisible.
+	{
+	  throw std::invalid_argument("Error: invalid values for top and bottom position in a cursor box");
+	}
+
+
 	res.new_cursor_box = cursor_box_t{ .left = left,
 					   .right = right,
 					   .top = top,

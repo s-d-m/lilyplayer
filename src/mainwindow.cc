@@ -4,6 +4,7 @@
 #include <QMessageBox>
 #include <QKeyEvent>
 #include <QGraphicsSvgItem>
+#include <QGraphicsRectItem>
 #include "mainwindow.hh"
 #include "ui_mainwindow.hh"
 
@@ -87,11 +88,20 @@ void MainWindow::display_music_sheet(const unsigned music_sheet_pos)
   }
 
   auto sheet = new QGraphicsSvgItem;
-  sheet->setSharedRenderer(rendered_sheets[music_sheet_pos]);
+  sheet->setSharedRenderer(rendered_sheets[music_sheet_pos].rendered);
   sheet->setFlags(QGraphicsItem::ItemClipsToShape);
   sheet->setCacheMode(QGraphicsItem::NoCache);
   sheet->setZValue(0);
   music_sheet_scene->addItem(sheet);
+
+  // if there was a rectangle displayed the clear function would have called the destructor
+  svg_rect = new QGraphicsSvgItem;
+  svg_rect->setFlags(QGraphicsItem::ItemClipsToShape);
+  svg_rect->setCacheMode(QGraphicsItem::NoCache);
+  svg_rect->setZValue(1);
+  music_sheet_scene->addItem(svg_rect);
+
+  current_svg_first_line = rendered_sheets[music_sheet_pos].svg_first_line;
 }
 
 void MainWindow::process_music_sheet_event(const music_sheet_event& event)
@@ -105,6 +115,31 @@ void MainWindow::process_music_sheet_event(const music_sheet_event& event)
   if (has_svg_file_change)
   {
     display_music_sheet(event.new_svg_file);
+  }
+
+  // is there a cursor pos change here?
+  const auto has_cursor_pos_change = ((event.sheet_events & has_event::cursor_pos_change) != 0);
+  if (has_cursor_pos_change)
+  {
+    const auto& cursor_box = event.new_cursor_box;
+    const auto top = cursor_box.top;
+    const auto left = cursor_box.left;
+    const auto width = cursor_box.right - left;
+    const auto height = cursor_box.bottom - top;
+
+    const auto to_dotted_str = [] (const auto num) {
+      return std::to_string(num / 10000) + "." + std::to_string(num % 10000);
+    };
+
+    const auto str = current_svg_first_line
+		     + "<rect x=\"" + to_dotted_str(left) + "\" y=\"" + to_dotted_str(top) + "\" width=\""
+		     + to_dotted_str(width) + "\" height=\"" + to_dotted_str(height)
+		     + "\" ry=\"0.0000\" fill=\"currentColor\" fill-opacity=\"0.4\"/></svg>";
+
+    QByteArray svg_str_rectangle (str.c_str());
+    cursor_rect->load(svg_str_rectangle);
+    svg_rect->setSharedRenderer( cursor_rect );
+
   }
 }
 
@@ -153,7 +188,7 @@ void MainWindow::stop_song()
   const auto nb_rendered = rendered_sheets.size();
   for (auto i = decltype(nb_rendered){0}; i < nb_rendered; ++i)
   {
-    delete rendered_sheets[i];
+    delete rendered_sheets[i].rendered;
   }
   rendered_sheets.clear();
 
@@ -200,27 +235,48 @@ void MainWindow::open_file(const std::string& filename)
 	throw std::runtime_error("Invalid state detected. There should be no rendered_sheets.");
     }
 
+    // pre-render each svg files first, so when there will be a turn page event, it is already parsed.
     for (unsigned int i = 0; i < nb_svg; ++i)
     {
       const auto& this_sheet = this->song.svg_files[i];
-      const QByteArray music_sheet (static_cast<const char*>(static_cast<const void*>(this_sheet.data.data())),
-				    static_cast<int>(this_sheet.data.size()));
+      const char* const sheet_data = static_cast<const char*>(static_cast<const void*>(this_sheet.data.data()));
+      const auto sheet_size = this_sheet.data.size();
+      const QByteArray music_sheet (sheet_data, static_cast<int>(sheet_size));
 
       auto current_renderer = new QSvgRenderer;
       const auto is_load_successfull = current_renderer->load(music_sheet);
       if (not is_load_successfull)
       {
+	delete current_renderer;
 	throw std::runtime_error("Invalid file format: failed to parse a music sheet page.");
       }
 
-      rendered_sheets.push_back(current_renderer);
+      // load is successful, so it is a proper svg file, so let's find the first line
+      unsigned closing_angle_pos = 0;
+      while ((closing_angle_pos < sheet_size) and (sheet_data[closing_angle_pos] != '>'))
+      {
+	closing_angle_pos++;
+      }
+
+      rendered_sheets.emplace_back(sheet_property{ current_renderer,
+						   std::string{ sheet_data, closing_angle_pos + 1 } });
     }
+
+    cursor_rect = new QSvgRenderer;
 
     display_music_sheet(0);
     is_in_pause = false;
   }
   catch (std::exception& e)
   {
+    // delete already rendered sheets
+    const auto nb_elts = rendered_sheets.size();
+    for (unsigned i = 0; i < nb_elts; ++i)
+    {
+      delete rendered_sheets[i].rendered;
+    }
+    rendered_sheets.clear();
+
     const auto err_msg = e.what();
     QMessageBox::critical(this, tr("Failed to open file."),
 			  err_msg,
@@ -530,6 +586,9 @@ MainWindow::MainWindow(QWidget *parent) :
   keyboard(),
   music_sheet_scene(new QGraphicsScene(this)),
   rendered_sheets(),
+  cursor_rect(nullptr),
+  svg_rect(nullptr),
+  current_svg_first_line(),
   signal_checker_timer(),
   song(),
   sound_player(RtMidi::LINUX_ALSA),
