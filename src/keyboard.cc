@@ -1,3 +1,4 @@
+#include <algorithm> // for min
 #include <iostream>
 #include <QGraphicsRectItem>
 
@@ -10,20 +11,20 @@ static constexpr qreal BLACK_KEY_WIDTH  {13.0};
 
 
 static
-void draw_piano_key(QGraphicsScene& scene, qreal x, qreal y, qreal width, qreal height, QColor color)
+void draw_piano_key(QGraphicsScene& scene, qreal x, qreal y, qreal width, qreal height, const QColor& color)
 {
   auto rect = scene.addRect(x, y, width, height);
   rect->setBrush(color);
 }
 
 static inline
-void draw_white_key(QGraphicsScene& scene, qreal x, qreal y, QColor color)
+void draw_white_key(QGraphicsScene& scene, qreal x, qreal y, const QColor& color)
 {
   draw_piano_key(scene, x, y, WHITE_KEY_WIDTH, WHITE_KEY_HEIGHT, color);
 }
 
 static inline
-void draw_black_key(QGraphicsScene& scene, qreal x, qreal y, QColor color)
+void draw_black_key(QGraphicsScene& scene, qreal x, qreal y, const QColor& color)
 {
   draw_piano_key(scene, x, y, BLACK_KEY_WIDTH, BLACK_KEY_HEIGHT, color);
 }
@@ -118,7 +119,7 @@ void draw_keyboard(QGraphicsScene& scene, const struct keys_color& keyboard)
   #pragma clang diagnostic ignored "-Wcovered-switch-default"
 #endif
 
-void set_color(struct keys_color& keyboard, enum note_kind note, QColor normal_key_color, QColor diese_key_color)
+void set_color(struct keys_color& keyboard, enum note_kind note, const QColor& normal_key_color, const QColor& diese_key_color)
 {
   switch (note)
   {
@@ -178,32 +179,17 @@ void update_keyboard(const std::vector<key_down>& keys_down,
 		     const std::vector<key_up>& keys_up,
 		     struct keys_color& keyboard)
 {
+  static const QColor white_key_colors[] = { Qt::blue, Qt::red,     Qt::green,  Qt::gray };
+  static const QColor black_key_colors[] = { Qt::cyan, Qt::magenta, Qt::yellow, Qt::darkYellow };
+
+  constexpr const uint8_t nb_colors = sizeof(white_key_colors) / sizeof(white_key_colors[0]);
+
   /* for each key pressed */
   for (const auto& key : keys_down)
   {
-    QColor white_keys_color;
-    QColor black_keys_color;
-
-    switch (key.staff_num)
-    {
-      case 0:
-	white_keys_color = Qt::blue;
-	black_keys_color = Qt::cyan;
-	break;
-      case 1:
-	white_keys_color = Qt::red;
-	black_keys_color = Qt::magenta;
-	break;
-      case 2:
-	white_keys_color = Qt::green;
-	black_keys_color = Qt::yellow;
-	break;
-      default:
-	white_keys_color = Qt::gray;
-	black_keys_color = Qt::darkYellow;
-	break;
-    }
-
+    const auto color_pos = std::min(key.staff_num, static_cast<uint8_t>(nb_colors - 1));
+    const QColor& white_keys_color = white_key_colors[color_pos];
+    const QColor& black_keys_color = black_key_colors[color_pos];
 
     set_color(keyboard, static_cast<enum note_kind>(key.pitch),
 	      white_keys_color, black_keys_color);
