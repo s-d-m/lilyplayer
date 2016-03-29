@@ -70,6 +70,18 @@ SRC :=  main.cc  \
 OBJS := ${SRC:.cc=.o}
 
 
+
+COVERAGE_HTML_DIR := ../COVERAGE_OUTPUT
+LCOV=lcov
+LCOV_FLAGS= --rc lcov_branch_coverage=1 \
+	    --rc genhtml_branch_coverage=1 \
+	    --rc geninfo_gcov_all_blocks=1 \
+	    --directory .
+
+GENHTML = genhtml
+GENHTML_FLAGS = --branch-coverage
+
+
 ifeq ($(findstring clang,$(CXX)), clang)
   CXX_WARN_FLAGS ?= -Weverything \
 		    -Wno-c++98-compat \
@@ -162,7 +174,9 @@ else
   CXXFLAGS += -O0 -ggdb3
 endif
 
-
+ifeq ($(GCOV),1)
+  CXXFLAGS += --coverage
+endif
 
 ifeq ($(GPROF),1)
   CXXFLAGS += -pg
@@ -205,10 +219,27 @@ ui_%.hh: %.ui
 scan-build:
 	${SCAN_BUILD} -analyze-headers --use-c++=/usr/bin/clang++ --status-bugs --keep-going  make -B
 
-clean:
-	rm -f ${TARGET} ${OBJS} $(SRC:%.cc=$/%.P) ${MOC_FILES} ${FORMS_HEADERS} Makefile.vars ${RESOURCE_CODE}
+${COVERAGE_HTML_DIR}:
+	[ -d "$@" ] || mkdir -p "$@"
 
-.PHONY: all clean scan-build
+coverage: | ${COVERAGE_HTML_DIR}
+	${MAKE} GCOV=1 -B CXX=g++
+	${LCOV} ${LCOV_FLAGS} --zerocounters
+	${MAKE} check
+	${LCOV} ${LCOV_FLAGS} --no-external --capture --output-file "${TARGET}.info"
+	${GENHTML} ${GENHTML_FLAGS} --output-directory="${COVERAGE_HTML_DIR}" "${TARGET}.info"
+
+check: ${TARGET}
+	${TARGET}
+
+
+clean:
+	rm -rf ${TARGET} ${OBJS} $(SRC:%.cc=$/%.P) ${MOC_FILES} ${FORMS_HEADERS} Makefile.vars ${RESOURCE_CODE} \
+	       $(SRC:%.cc=%.gcda) $(SRC:%.cc=%.gcno) $(SRC:%.cc=%.info) $(SRC:%.cc=%.gcna) \
+	       "${COVERAGE_HTML_DIR}"  "${TARGET}.info"
+
+
+.PHONY: all clean scan-build coverage check
 
 .SUFFIXES:
 
