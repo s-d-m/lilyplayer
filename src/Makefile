@@ -81,6 +81,8 @@ LCOV_FLAGS= --rc lcov_branch_coverage=1 \
 GENHTML = genhtml
 GENHTML_FLAGS = --branch-coverage
 
+GPROF = gprof
+PROFILING_OUTPUT = profiling_output.txt
 
 ifeq ($(findstring clang,$(CXX)), clang)
   CXX_WARN_FLAGS ?= -Weverything \
@@ -229,6 +231,11 @@ coverage: | ${COVERAGE_HTML_DIR}
 	${LCOV} ${LCOV_FLAGS} --no-external --capture --output-file "${TARGET}.info"
 	${GENHTML} ${GENHTML_FLAGS} --output-directory="${COVERAGE_HTML_DIR}" "${TARGET}.info"
 
+profiling:
+	${MAKE} GPROF=1 -B CXX=g++
+	${TARGET}
+	${GPROF} "${TARGET}" gmon.out > "${PROFILING_OUTPUT}"
+
 check: ${TARGET}
 	${TARGET}
 
@@ -236,10 +243,10 @@ check: ${TARGET}
 clean:
 	rm -rf ${TARGET} ${OBJS} $(SRC:%.cc=$/%.P) ${MOC_FILES} ${FORMS_HEADERS} Makefile.vars ${RESOURCE_CODE} \
 	       $(SRC:%.cc=%.gcda) $(SRC:%.cc=%.gcno) $(SRC:%.cc=%.info) $(SRC:%.cc=%.gcna) \
-	       "${COVERAGE_HTML_DIR}"  "${TARGET}.info"
+	       "${COVERAGE_HTML_DIR}"  "${TARGET}.info" gmon.out  "${PROFILING_OUTPUT}"
 
 
-.PHONY: all clean scan-build coverage check
+.PHONY: all clean scan-build coverage check profiling
 
 .SUFFIXES:
 
