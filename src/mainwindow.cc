@@ -16,10 +16,15 @@
 extern volatile sig_atomic_t pause_requested;
 extern volatile sig_atomic_t continue_requested;
 extern volatile sig_atomic_t exit_requested;
+extern volatile sig_atomic_t new_signal_received;
 
 
 void MainWindow::look_for_signals_change()
 {
+  if (not new_signal_received)
+  {
+    return;
+  }
 
   if (exit_requested)
   {
@@ -38,6 +43,7 @@ void MainWindow::look_for_signals_change()
     is_in_pause = false;
   }
 
+  new_signal_received = 0;
 }
 
 void MainWindow::keyPressEvent(QKeyEvent* event)
