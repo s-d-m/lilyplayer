@@ -5,93 +5,52 @@
 #include "keyboard.hh"
 
 
-#define OCTAVE_COLOR(X)							\
-  case note_kind::do_##X:						\
-  keyboard.keys[note_kind::do_##X - note_kind::la_0]->setBrush(normal_key_color); \
-  break;								\
-  case note_kind::do_diese_##X:						\
-  keyboard.keys[note_kind::do_diese_##X - note_kind::la_0]->setBrush(diese_key_color); \
-  break;							\
-  case note_kind::re_##X:					\
-  keyboard.keys[note_kind::re_##X - note_kind::la_0]->setBrush(normal_key_color); \
-  break;								\
-  case note_kind::re_diese_##X:					\
-  keyboard.keys[note_kind::re_diese_##X - note_kind::la_0]->setBrush(diese_key_color); \
-  break;							\
-  case note_kind::mi_##X:					\
-  keyboard.keys[note_kind::mi_##X - note_kind::la_0]->setBrush(normal_key_color); \
-  break;							\
-  case note_kind::fa_##X:					\
-  keyboard.keys[note_kind::fa_##X - note_kind::la_0]->setBrush(normal_key_color); \
-  break;							\
-  case note_kind::fa_diese_##X:					\
-  keyboard.keys[note_kind::fa_diese_##X - note_kind::la_0]->setBrush(diese_key_color); \
-  break;							\
-  case note_kind::sol_##X:					\
-  keyboard.keys[note_kind::sol_##X - note_kind::la_0]->setBrush(normal_key_color); \
-  break;							\
-  case note_kind::sol_diese_##X:				\
-  keyboard.keys[note_kind::sol_diese_##X - note_kind::la_0]->setBrush(diese_key_color); \
-  break;							\
-  case note_kind::la_##X:					\
-  keyboard.keys[note_kind::la_##X - note_kind::la_0]->setBrush(normal_key_color); \
-  break;							\
-  case note_kind::la_diese_##X:					\
-  keyboard.keys[note_kind::la_diese_##X - note_kind::la_0]->setBrush(diese_key_color); \
-  break;							\
-  case note_kind::si_##X:					\
-  keyboard.keys[note_kind::si_##X - note_kind::la_0]->setBrush(normal_key_color); \
-  break								\
-
-
-#if defined(__clang__)
-  // clang will complain in a switch that the default case is useless
-  // because all possible values in the enum are already taken into
-  // account.  however, since the value can come from an unrestricted
-  // uint8_t, the default is actually a necessary safe-guard.
-  #pragma clang diagnostic push
-  #pragma clang diagnostic ignored "-Wcovered-switch-default"
-#endif
 
 void set_color(struct keys_rects& keyboard, enum note_kind note, const QColor& normal_key_color, const QColor& diese_key_color)
 {
-  switch (note)
+  if ((static_cast<uint8_t>(note) < static_cast<uint8_t>(note_kind::la_0)) or
+      (static_cast<uint8_t>(note) > static_cast<uint8_t>(note_kind::do_8)))
   {
-    case note_kind::la_0:
-      keyboard.keys[note_kind::la_0 - note_kind::la_0]->setBrush(normal_key_color);
-      break;
-
-    case note_kind::la_diese_0:
-      keyboard.keys[note_kind::la_diese_0 - note_kind::la_0]->setBrush(diese_key_color);
-      break;
-
-    case note_kind::si_0:
-      keyboard.keys[note_kind::si_0 - note_kind::la_0]->setBrush(normal_key_color);
-      break;
-
-      OCTAVE_COLOR(1);
-      OCTAVE_COLOR(2);
-      OCTAVE_COLOR(3);
-      OCTAVE_COLOR(4);
-      OCTAVE_COLOR(5);
-      OCTAVE_COLOR(6);
-      OCTAVE_COLOR(7);
-
-    case note_kind::do_8:
-      keyboard.keys[note_kind::do_8 - note_kind::la_0]->setBrush(normal_key_color);
-      break;
-
-    default:
-      std::cerr << "Warning key " << static_cast<long unsigned int>(note)
-		<< " is not representable in a 88 key piano" << std::endl;
-      break;
+    std::cerr << "Warning key " << static_cast<long unsigned int>(note)
+	      << " is not representable in a 88 key piano" << std::endl;
+    return;
   }
-}
-#if defined(__clang__)
-  #pragma clang diagnostic pop
-#endif
+
+#define OCTAVE_COLOR(X)		\
+  true,  /* do_##X */		\
+  false, /* do_diese_##X */	\
+  true,  /* re_##X */		\
+  false, /* re_diese_##X */	\
+  true,  /* mi_##X */		\
+  true,  /* fa_##X */		\
+  false, /* fa_diese_##X */	\
+  true,  /* sol_##X */		\
+  false, /* sol_diese_##X */	\
+  true,  /* la_##X */		\
+  false, /* la_diese_##X */	\
+  true   /* si_##X */
+
+  static constexpr const bool is_normal_keys[static_cast<uint8_t>(note_kind::do_8) - static_cast<uint8_t>(note_kind::la_0) + 1] = {
+    true, // la_0
+    false, // la_diese_0
+    true, //si_0
+    OCTAVE_COLOR(1),
+    OCTAVE_COLOR(2),
+    OCTAVE_COLOR(3),
+    OCTAVE_COLOR(4),
+    OCTAVE_COLOR(5),
+    OCTAVE_COLOR(6),
+    OCTAVE_COLOR(7),
+    true // do_8
+  };
 
 #undef OCTAVE_COLOR
+
+  const auto pos = static_cast<uint8_t>(note) - static_cast<uint8_t>(note_kind::la_0);
+  const auto is_normal_key = is_normal_keys[pos];
+  const auto &key_color = is_normal_key ? normal_key_color : diese_key_color;
+  keyboard.keys[pos]->setBrush(key_color);
+}
 
 void reset_color(struct keys_rects& keyboard, enum note_kind note)
 {
