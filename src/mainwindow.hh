@@ -78,7 +78,7 @@ class MainWindow : public QMainWindow
 
     Ui::MainWindow *ui;
     QGraphicsScene *keyboard_scene;
-    struct keys_color keyboard;
+    keys_rects keyboard;
     QGraphicsScene *music_sheet_scene;
     std::vector<sheet_property> rendered_sheets;
     QSvgRenderer* cursor_rect;

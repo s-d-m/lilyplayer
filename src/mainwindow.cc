@@ -58,7 +58,6 @@ void MainWindow::process_keyboard_event(const std::vector<key_down>& keys_down,
 					const std::vector<midi_message_t>& messages)
 {
   update_keyboard(keys_down, keys_up, this->keyboard);
-  draw_keyboard(*(this->keyboard_scene), this->keyboard);
   this->update();
 
   for (auto message : messages)
@@ -215,7 +214,6 @@ void MainWindow::stop_song()
 
   // reset all keys to up on the keyboard (doesn't play key_released events).
   reset_color(keyboard);
-  draw_keyboard(*(this->keyboard_scene), this->keyboard);
   this->update();
 }
 
@@ -583,7 +581,7 @@ MainWindow::MainWindow(QWidget *parent) :
   QMainWindow(parent),
   ui(new Ui::MainWindow),
   keyboard_scene(new QGraphicsScene(this)),
-  keyboard(),
+  keyboard(*keyboard_scene),
   music_sheet_scene(new QGraphicsScene(this)),
   rendered_sheets(),
   cursor_rect(nullptr),
@@ -600,7 +598,6 @@ MainWindow::MainWindow(QWidget *parent) :
   ui->setupUi(this);
   ui->keyboard->setRenderHints(QPainter::Antialiasing | QPainter::SmoothPixmapTransform);
   ui->keyboard->setScene(keyboard_scene);
-  draw_keyboard(*keyboard_scene, this->keyboard);
 
   ui->music_sheet->setScene(music_sheet_scene);
 

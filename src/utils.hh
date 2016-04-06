@@ -29,7 +29,7 @@ struct key_up
 
 #define OCTAVE(X) \
   do_##X,	  \
-  do_diese##X,	  \
+  do_diese_##X,	  \
   re_##X,	  \
   re_diese_##X,   \
   mi_##X,	  \
