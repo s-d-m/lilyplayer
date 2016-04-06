@@ -63,7 +63,7 @@ void reset_color(struct keys_rects& keyboard)
        key <= static_cast<uint8_t>(note_kind::do_8);
        ++key)
   {
-    set_color(keyboard, static_cast<note_kind>(key), Qt::white, Qt::black);
+    reset_color(keyboard, static_cast<note_kind>(key));
   }
 }
 
