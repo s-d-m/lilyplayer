@@ -4,6 +4,7 @@
 #include <vector>
 #include <limits>
 #include <fstream>
+#include <string>
 
 struct key_down
 {
@@ -90,5 +91,8 @@ get_midi_from_keys_events(const std::vector<key_down>& keys_down,
 
 void list_midi_ports(std::ostream& out);
 unsigned int get_port(const std::string& s);
+
+std::string get_first_svg_line(const std::vector<uint8_t>& data);
+
 
 #endif /* UTILS_HH_ */

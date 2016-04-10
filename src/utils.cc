@@ -234,3 +234,19 @@ unsigned int get_port(const std::string& s)
     return 0;
   }
 }
+
+
+std::string get_first_svg_line(const std::vector<uint8_t>& data)
+{
+  const char* const sheet_data = static_cast<const char*>(static_cast<const void*>(data.data()));
+  const auto size = data.size();
+
+  // load is successful, so it is a proper svg file, so let's find the first line
+  unsigned closing_angle_pos = 0;
+  while ((closing_angle_pos < size) and (sheet_data[closing_angle_pos] != '>'))
+  {
+    closing_angle_pos++;
+  }
+
+  return std::string{sheet_data, closing_angle_pos + 1};
+}
