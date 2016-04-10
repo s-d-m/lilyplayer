@@ -136,31 +136,31 @@ void MainWindow::process_music_sheet_event(const music_sheet_event& event)
 
 void MainWindow::song_event_loop()
 {
-  if (is_in_pause.load())
+  if (is_in_pause.load() or (song_pos == INVALID_SONG_POS))
   {
     QTimer::singleShot(100, this, SLOT(song_event_loop()));
     return;
   }
 
-  if (song_pos == INVALID_SONG_POS)
+  const auto nb_events = this->song.events.size();
+  if (song_pos == nb_events)
   {
+    stop_song();
     QTimer::singleShot(100, this, SLOT(song_event_loop()));
-    return;
   }
 
-
-  if ((song_pos != 0) and (song_pos >= this->song.events.size()))
+  if (song_pos > nb_events)
   {
     throw std::runtime_error("Invalid song position found");
   }
 
   process_music_sheet_event( song.events[song_pos] );
 
-  if (song_pos + 1 == this->song.events.size())
+  if (song_pos + 1 == nb_events)
   {
-    // song is finished
-    stop_song();
-    QTimer::singleShot(100, this, SLOT(song_event_loop()));
+    // wait 3 seconds so that user has time to see the last keys up
+    // before the music sheet disappear
+    QTimer::singleShot(3000, this, SLOT(song_event_loop()));
   }
   else
   {
