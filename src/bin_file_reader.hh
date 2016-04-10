@@ -32,6 +32,7 @@ struct music_sheet_event
       : time()
       , keys_down()
       , keys_up()
+      , midi_messages()
       , new_cursor_box()
       , sheet_events()
       , new_bar_number()
@@ -45,6 +46,7 @@ struct music_sheet_event
 		   // (in ns)
     std::vector<key_down> keys_down;
     std::vector<key_up>   keys_up;
+    std::vector<midi_message_t> midi_messages;
     QByteArray new_cursor_box;
     enum has_event sheet_events;
     uint16_t new_bar_number;

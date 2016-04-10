@@ -170,6 +170,8 @@ music_sheet_event read_grouped_event(std::fstream& file)
     throw std::invalid_argument("Error: How come an change of a page is not linked to a change of ");
   }
 
+  res.midi_messages = get_midi_from_keys_events(res.keys_down, res.keys_up);
+
   return res;
 }
 

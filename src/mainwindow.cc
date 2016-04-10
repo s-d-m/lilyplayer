@@ -117,8 +117,7 @@ void MainWindow::display_music_sheet(const unsigned music_sheet_pos)
 void MainWindow::process_music_sheet_event(const music_sheet_event& event)
 {
   // process the keyboard event. Must have one.
-  const auto midi_messages = get_midi_from_keys_events(event.keys_down, event.keys_up);
-  this->process_keyboard_event(event.keys_down, event.keys_up, midi_messages);
+  this->process_keyboard_event(event.keys_down, event.keys_up, event.midi_messages);
 
   // is there a svg file change?
   const auto has_svg_file_change = ((event.sheet_events & has_event::svg_file_change) != 0);
