@@ -167,7 +167,7 @@ music_sheet_event read_grouped_event(std::fstream& file)
   if ((res.sheet_events & svg_file_change) and
       (not (res.sheet_events & cursor_pos_change)))
   {
-    throw std::invalid_argument("Error: How come an change of a page is not linked to a change of ");
+    throw std::invalid_argument("Error: How come a change of a page is not linked to a change of ");
   }
 
   res.midi_messages = get_midi_from_keys_events(res.keys_down, res.keys_up);
