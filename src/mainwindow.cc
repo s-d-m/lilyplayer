@@ -104,9 +104,16 @@ void MainWindow::display_music_sheet(const unsigned music_sheet_pos)
   svg_rect->setFlags(QGraphicsItem::ItemClipsToShape);
   svg_rect->setCacheMode(QGraphicsItem::NoCache);
   svg_rect->setZValue(1);
+  svg_rect->setSharedRenderer( cursor_rect );
   music_sheet_scene->addItem(svg_rect);
 
   current_svg_first_line = rendered_sheets[music_sheet_pos].svg_first_line;
+  const auto str = current_svg_first_line
+    + "<rect x=\"0.0000\" y=\"0.0000\" width=\"0.0000\" height=\"0.0000\""
+    " ry=\"0.0000\" fill=\"currentColor\" fill-opacity=\"0.4\"/></svg>";
+
+  QByteArray svg_str_rectangle (str.c_str());
+  cursor_rect->load(svg_str_rectangle);
 }
 
 void MainWindow::process_music_sheet_event(const music_sheet_event& event)
@@ -143,8 +150,6 @@ void MainWindow::process_music_sheet_event(const music_sheet_event& event)
 
     QByteArray svg_str_rectangle (str.c_str());
     cursor_rect->load(svg_str_rectangle);
-    svg_rect->setSharedRenderer( cursor_rect );
-
   }
 }
 
@@ -265,8 +270,6 @@ void MainWindow::open_file(const std::string& filename)
       rendered_sheets.emplace_back(sheet_property{ current_renderer,
 						   std::string{ sheet_data, closing_angle_pos + 1 } });
     }
-
-    cursor_rect = new QSvgRenderer;
 
     display_music_sheet(0);
     is_in_pause = false;
@@ -590,7 +593,7 @@ MainWindow::MainWindow(QWidget *parent) :
   keyboard(*keyboard_scene),
   music_sheet_scene(new QGraphicsScene(this)),
   rendered_sheets(),
-  cursor_rect(nullptr),
+  cursor_rect(new QSvgRenderer(this)),
   svg_rect(nullptr),
   current_svg_first_line(),
   signal_checker_timer(),
