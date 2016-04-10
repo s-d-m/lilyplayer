@@ -9,10 +9,12 @@
 extern volatile sig_atomic_t pause_requested;
 extern volatile sig_atomic_t continue_requested;
 extern volatile sig_atomic_t exit_requested;
+extern volatile sig_atomic_t new_signal_received;
 
 volatile sig_atomic_t pause_requested = 0;
 volatile sig_atomic_t continue_requested = 0;
 volatile sig_atomic_t exit_requested = 0;
+volatile sig_atomic_t new_signal_received = 0;
 
 static
 const char* signum_to_str(int signum)
@@ -61,16 +63,19 @@ static void signal_handler(int signum)
   switch (signum)
   {
     case SIGINT:  // Interrupt from keyboard
+      new_signal_received = 1;
       pause_requested = 1;
       break;
 
     case SIGCONT: // Continue if stopped
+      new_signal_received = 1;
       continue_requested = 1;
       break;
 
     case SIGQUIT: // stop program
     case SIGTERM:
     case SIGTSTP:
+      new_signal_received = 1;
       exit_requested = 1;
       break;
 

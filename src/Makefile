@@ -232,7 +232,8 @@ coverage: | ${COVERAGE_HTML_DIR}
 	${GENHTML} ${GENHTML_FLAGS} --output-directory="${COVERAGE_HTML_DIR}" "${TARGET}.info"
 
 profiling:
-	${MAKE} GPROF=1 -B CXX=g++
+	${MAKE} GPROF=1 BUILD=release SANITIZERS= -B CXX=g++
+	-rm -f gmon.out
 	${TARGET}
 	${GPROF} "${TARGET}" gmon.out > "${PROFILING_OUTPUT}"
 

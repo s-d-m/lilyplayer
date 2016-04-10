@@ -3,69 +3,109 @@
 
 #include <QColor>
 #include <QGraphicsScene>
+#include <QGraphicsRectItem>
 
 #include "utils.hh"
 
 
-struct octave_color
-{
-    octave_color()
-      : do_color (Qt::white)
-      , re_color (Qt::white)
-      , mi_color (Qt::white)
-      , fa_color (Qt::white)
-      , sol_color (Qt::white)
-      , la_color (Qt::white)
-      , si_color (Qt::white)
+static constexpr qreal WHITE_KEY_HEIGHT {120.0};
+static constexpr qreal WHITE_KEY_WIDTH  {23.0};
+static constexpr qreal BLACK_KEY_HEIGHT {80.0};
+static constexpr qreal BLACK_KEY_WIDTH  {13.0};
 
-      , do_diese_color (Qt::black)
-      , re_diese_color (Qt::black)
-      , fa_diese_color (Qt::black)
-      , sol_diese_color (Qt::black)
-      , la_diese_color (Qt::black)
+static constexpr qreal OCTAVE_WIDTH { qreal{7} * WHITE_KEY_WIDTH };
+
+struct keys_rects
+{
+
+#define OCTAVE(num_octave)			       \
+  keys[note_kind::do_##num_octave - note_kind::la_0] = \
+    scene.addRect(x + (qreal{2} * WHITE_KEY_WIDTH) + (qreal{num_octave - 1} * OCTAVE_WIDTH),                                y, WHITE_KEY_WIDTH, WHITE_KEY_HEIGHT); \
+  keys[note_kind::do_##num_octave - note_kind::la_0]->setBrush(Qt::white); \
+  \
+  keys[note_kind::re_##num_octave - note_kind::la_0] = \
+    scene.addRect(x + (qreal{2} * WHITE_KEY_WIDTH) + (qreal{num_octave - 1} * OCTAVE_WIDTH) +             WHITE_KEY_WIDTH,  y, WHITE_KEY_WIDTH, WHITE_KEY_HEIGHT); \
+  keys[note_kind::re_##num_octave - note_kind::la_0]->setBrush(Qt::white); \
+  \
+  keys[note_kind::mi_##num_octave - note_kind::la_0] = \
+    scene.addRect(x + (qreal{2} * WHITE_KEY_WIDTH) + (qreal{num_octave - 1} * OCTAVE_WIDTH) + (qreal{2} * WHITE_KEY_WIDTH), y, WHITE_KEY_WIDTH, WHITE_KEY_HEIGHT); \
+  keys[note_kind::mi_##num_octave - note_kind::la_0]->setBrush(Qt::white); \
+  \
+  keys[note_kind::fa_##num_octave - note_kind::la_0] = \
+    scene.addRect(x + (qreal{2} * WHITE_KEY_WIDTH) + (qreal{num_octave - 1} * OCTAVE_WIDTH) + (qreal{3} * WHITE_KEY_WIDTH), y, WHITE_KEY_WIDTH, WHITE_KEY_HEIGHT); \
+  keys[note_kind::fa_##num_octave - note_kind::la_0]->setBrush(Qt::white); \
+  \
+  keys[note_kind::sol_##num_octave - note_kind::la_0] = \
+    scene.addRect(x + (qreal{2} * WHITE_KEY_WIDTH) + (qreal{num_octave - 1} * OCTAVE_WIDTH) + (qreal{4} * WHITE_KEY_WIDTH), y, WHITE_KEY_WIDTH, WHITE_KEY_HEIGHT); \
+  keys[note_kind::sol_##num_octave - note_kind::la_0]->setBrush(Qt::white); \
+  \
+  keys[note_kind::la_##num_octave - note_kind::la_0] = \
+    scene.addRect(x + (qreal{2} * WHITE_KEY_WIDTH) + (qreal{num_octave - 1} * OCTAVE_WIDTH) + (qreal{5} * WHITE_KEY_WIDTH), y, WHITE_KEY_WIDTH, WHITE_KEY_HEIGHT); \
+  keys[note_kind::la_##num_octave - note_kind::la_0]->setBrush(Qt::white); \
+  \
+  keys[note_kind::si_##num_octave - note_kind::la_0] = \
+    scene.addRect(x + (qreal{2} * WHITE_KEY_WIDTH) + (qreal{num_octave - 1} * OCTAVE_WIDTH) + (qreal{6} * WHITE_KEY_WIDTH), y, WHITE_KEY_WIDTH, WHITE_KEY_HEIGHT); \
+  keys[note_kind::si_##num_octave - note_kind::la_0]->setBrush(Qt::white); \
+  \
+  keys[note_kind::do_diese_##num_octave - note_kind::la_0] = \
+    scene.addRect(x + (qreal{2} * WHITE_KEY_WIDTH) + (qreal{num_octave - 1} * OCTAVE_WIDTH) + (qreal{43} / qreal{3}), y, BLACK_KEY_WIDTH, BLACK_KEY_HEIGHT); \
+  keys[note_kind::do_diese_##num_octave - note_kind::la_0]->setBrush(Qt::black); \
+  \
+  keys[note_kind::re_diese_##num_octave - note_kind::la_0] = \
+    scene.addRect(x + (qreal{2} * WHITE_KEY_WIDTH) + (qreal{num_octave - 1} * OCTAVE_WIDTH) + (qreal{125} / qreal{3}), y, BLACK_KEY_WIDTH, BLACK_KEY_HEIGHT); \
+  keys[note_kind::re_diese_##num_octave - note_kind::la_0]->setBrush(Qt::black); \
+  \
+  keys[note_kind::fa_diese_##num_octave - note_kind::la_0] = \
+    scene.addRect(x + (qreal{2} * WHITE_KEY_WIDTH) + (qreal{num_octave - 1} * OCTAVE_WIDTH) + (qreal{329} / qreal{4}), y, BLACK_KEY_WIDTH, BLACK_KEY_HEIGHT); \
+  keys[note_kind::fa_diese_##num_octave - note_kind::la_0]->setBrush(Qt::black); \
+  \
+  keys[note_kind::sol_diese_##num_octave - note_kind::la_0] = \
+    scene.addRect(x + (qreal{2} * WHITE_KEY_WIDTH) + (qreal{num_octave - 1} * OCTAVE_WIDTH) + (qreal{433} / qreal{4}), y, BLACK_KEY_WIDTH, BLACK_KEY_HEIGHT); \
+  keys[note_kind::sol_diese_##num_octave - note_kind::la_0]->setBrush(Qt::black); \
+  \
+  keys[note_kind::la_diese_##num_octave - note_kind::la_0] = \
+    scene.addRect(x + (qreal{2} * WHITE_KEY_WIDTH) + (qreal{num_octave - 1} * OCTAVE_WIDTH) + (qreal{539} / qreal{4}), y, BLACK_KEY_WIDTH, BLACK_KEY_HEIGHT); \
+  keys[note_kind::la_diese_##num_octave - note_kind::la_0]->setBrush(Qt::black);
+
+    keys_rects(QGraphicsScene& scene, const qreal x = 0, const qreal y = 0)
     {
+      keys[note_kind::la_0 - note_kind::la_0] =
+	scene.addRect(x, y, WHITE_KEY_WIDTH, WHITE_KEY_HEIGHT);
+      keys[note_kind::la_0 - note_kind::la_0]->setBrush(Qt::white);
+
+      keys[note_kind::si_0 - note_kind::la_0] =
+	scene.addRect(x + WHITE_KEY_WIDTH, y, WHITE_KEY_WIDTH, WHITE_KEY_HEIGHT);
+      keys[note_kind::si_0 - note_kind::la_0]->setBrush(Qt::white);
+
+      keys[note_kind::la_diese_0 - note_kind::la_0] =
+	scene.addRect(x + (qreal{33} / qreal{2}), y, BLACK_KEY_WIDTH, BLACK_KEY_HEIGHT);
+      keys[note_kind::la_diese_0 - note_kind::la_0]->setBrush(Qt::black);
+
+      OCTAVE(1);
+      OCTAVE(2);
+      OCTAVE(3);
+      OCTAVE(4);
+      OCTAVE(5);
+      OCTAVE(6);
+      OCTAVE(7);
+
+      keys[note_kind::do_8 - note_kind::la_0] =
+	scene.addRect(x + (qreal{2} * WHITE_KEY_WIDTH) + (qreal{7} * OCTAVE_WIDTH), y, WHITE_KEY_WIDTH, WHITE_KEY_HEIGHT); \
+      keys[note_kind::do_8 - note_kind::la_0]->setBrush(Qt::white);
     }
 
-    QColor do_color;
-    QColor re_color;
-    QColor mi_color;
-    QColor fa_color;
-    QColor sol_color;
-    QColor la_color;
-    QColor si_color;
+#undef OCTAVE
 
-    QColor do_diese_color;
-    QColor re_diese_color;
-    QColor fa_diese_color;
-    QColor sol_diese_color;
-    QColor la_diese_color;
+    QGraphicsRectItem* keys[note_kind::do_8 - note_kind::la_0 + 1];
 };
 
 
-struct keys_color
-{
-    keys_color()
-      : la_0_color (Qt::white)
-      , si_0_color (Qt::white)
-      , la_diese_0_color (Qt::black)
-      ,	octaves ()
-      , do_8_color (Qt::white)
-    {
-    }
 
-    QColor la_0_color;
-    QColor si_0_color;
-    QColor la_diese_0_color;
-    struct octave_color octaves[7];
-    QColor do_8_color;
-};
-
-void draw_keyboard(QGraphicsScene& scene, const struct keys_color& keyboard);
-void reset_color(struct keys_color& keyboard, enum note_kind note);
-void reset_color(struct keys_color& keyboard); // reset all keys
-void set_color(struct keys_color& keyboard, enum note_kind note, QColor normal_key_color, QColor diese_key_color);
+void reset_color(struct keys_rects& keyboard, enum note_kind note);
+void reset_color(struct keys_rects& keyboard); // reset all keys
+void set_color(struct keys_rects& keyboard, enum note_kind note, const QColor& normal_key_color, const QColor& diese_key_color);
 void update_keyboard(const std::vector<key_down>& keys_down,
 		     const std::vector<key_up>& keys_up,
-		     struct keys_color& keyboard);
+		     struct keys_rects& keyboard);
 
 #endif

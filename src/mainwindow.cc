@@ -16,10 +16,15 @@
 extern volatile sig_atomic_t pause_requested;
 extern volatile sig_atomic_t continue_requested;
 extern volatile sig_atomic_t exit_requested;
+extern volatile sig_atomic_t new_signal_received;
 
 
 void MainWindow::look_for_signals_change()
 {
+  if (not new_signal_received)
+  {
+    return;
+  }
 
   if (exit_requested)
   {
@@ -38,6 +43,7 @@ void MainWindow::look_for_signals_change()
     is_in_pause = false;
   }
 
+  new_signal_received = 0;
 }
 
 void MainWindow::keyPressEvent(QKeyEvent* event)
@@ -58,7 +64,6 @@ void MainWindow::process_keyboard_event(const std::vector<key_down>& keys_down,
 					const std::vector<midi_message_t>& messages)
 {
   update_keyboard(keys_down, keys_up, this->keyboard);
-  draw_keyboard(*(this->keyboard_scene), this->keyboard);
   this->update();
 
   for (auto message : messages)
@@ -99,16 +104,20 @@ void MainWindow::display_music_sheet(const unsigned music_sheet_pos)
   svg_rect->setFlags(QGraphicsItem::ItemClipsToShape);
   svg_rect->setCacheMode(QGraphicsItem::NoCache);
   svg_rect->setZValue(1);
+  svg_rect->setSharedRenderer( cursor_rect );
   music_sheet_scene->addItem(svg_rect);
 
-  current_svg_first_line = rendered_sheets[music_sheet_pos].svg_first_line;
+  QByteArray svg_str_rectangle (rendered_sheets[music_sheet_pos].svg_first_line.c_str());
+  svg_str_rectangle +=
+    "<rect x=\"0.0000\" y=\"0.0000\" width=\"0.0000\" height=\"0.0000\""
+    " ry=\"0.0000\" fill=\"currentColor\" fill-opacity=\"0.4\"/></svg>";
+  cursor_rect->load(svg_str_rectangle);
 }
 
 void MainWindow::process_music_sheet_event(const music_sheet_event& event)
 {
   // process the keyboard event. Must have one.
-  const auto midi_messages = get_midi_from_keys_events(event.keys_down, event.keys_up);
-  this->process_keyboard_event(event.keys_down, event.keys_up, midi_messages);
+  this->process_keyboard_event(event.keys_down, event.keys_up, event.midi_messages);
 
   // is there a svg file change?
   const auto has_svg_file_change = ((event.sheet_events & has_event::svg_file_change) != 0);
@@ -121,25 +130,7 @@ void MainWindow::process_music_sheet_event(const music_sheet_event& event)
   const auto has_cursor_pos_change = ((event.sheet_events & has_event::cursor_pos_change) != 0);
   if (has_cursor_pos_change)
   {
-    const auto& cursor_box = event.new_cursor_box;
-    const auto top = cursor_box.top;
-    const auto left = cursor_box.left;
-    const auto width = cursor_box.right - left;
-    const auto height = cursor_box.bottom - top;
-
-    const auto to_dotted_str = [] (const auto num) {
-      return std::to_string(num / 10000) + "." + std::to_string(num % 10000);
-    };
-
-    const auto str = current_svg_first_line
-		     + "<rect x=\"" + to_dotted_str(left) + "\" y=\"" + to_dotted_str(top) + "\" width=\""
-		     + to_dotted_str(width) + "\" height=\"" + to_dotted_str(height)
-		     + "\" ry=\"0.0000\" fill=\"currentColor\" fill-opacity=\"0.4\"/></svg>";
-
-    QByteArray svg_str_rectangle (str.c_str());
-    cursor_rect->load(svg_str_rectangle);
-    svg_rect->setSharedRenderer( cursor_rect );
-
+    cursor_rect->load(event.new_cursor_box);
   }
 }
 
@@ -215,7 +206,6 @@ void MainWindow::stop_song()
 
   // reset all keys to up on the keyboard (doesn't play key_released events).
   reset_color(keyboard);
-  draw_keyboard(*(this->keyboard_scene), this->keyboard);
   this->update();
 }
 
@@ -251,18 +241,9 @@ void MainWindow::open_file(const std::string& filename)
 	throw std::runtime_error("Invalid file format: failed to parse a music sheet page.");
       }
 
-      // load is successful, so it is a proper svg file, so let's find the first line
-      unsigned closing_angle_pos = 0;
-      while ((closing_angle_pos < sheet_size) and (sheet_data[closing_angle_pos] != '>'))
-      {
-	closing_angle_pos++;
-      }
-
       rendered_sheets.emplace_back(sheet_property{ current_renderer,
-						   std::string{ sheet_data, closing_angle_pos + 1 } });
+						   get_first_svg_line(this_sheet.data) });
     }
-
-    cursor_rect = new QSvgRenderer;
 
     display_music_sheet(0);
     is_in_pause = false;
@@ -583,10 +564,10 @@ MainWindow::MainWindow(QWidget *parent) :
   QMainWindow(parent),
   ui(new Ui::MainWindow),
   keyboard_scene(new QGraphicsScene(this)),
-  keyboard(),
+  keyboard(*keyboard_scene),
   music_sheet_scene(new QGraphicsScene(this)),
   rendered_sheets(),
-  cursor_rect(nullptr),
+  cursor_rect(new QSvgRenderer(this)),
   svg_rect(nullptr),
   current_svg_first_line(),
   signal_checker_timer(),
@@ -600,7 +581,6 @@ MainWindow::MainWindow(QWidget *parent) :
   ui->setupUi(this);
   ui->keyboard->setRenderHints(QPainter::Antialiasing | QPainter::SmoothPixmapTransform);
   ui->keyboard->setScene(keyboard_scene);
-  draw_keyboard(*keyboard_scene, this->keyboard);
 
   ui->music_sheet->setScene(music_sheet_scene);
 

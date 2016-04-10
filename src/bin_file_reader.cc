@@ -129,11 +129,19 @@ music_sheet_event read_grouped_event(std::fstream& file)
 	  throw std::invalid_argument("Error: invalid values for top and bottom position in a cursor box");
 	}
 
+	const auto width = right - left;
+	const auto height = bottom - top;
 
-	res.new_cursor_box = cursor_box_t{ .left = left,
-					   .right = right,
-					   .top = top,
-					   .bottom = bottom };
+	const auto to_dotted_str = [] (const auto num) {
+	  return std::to_string(num / 10000) + "." + std::to_string(num % 10000);
+	};
+
+	const auto str = // the first svg line is unknown at this point. Must be set later.
+	  "<rect x=\"" + to_dotted_str(left) + "\" y=\"" + to_dotted_str(top) + "\" width=\""
+	  + to_dotted_str(width) + "\" height=\"" + to_dotted_str(height)
+	  + "\" ry=\"0.0000\" fill=\"currentColor\" fill-opacity=\"0.4\"/></svg>";
+
+	res.new_cursor_box = str.c_str();
 
 	res.sheet_events = static_cast<has_event>(res.sheet_events | has_event::cursor_pos_change);
 	break;
@@ -159,8 +167,10 @@ music_sheet_event read_grouped_event(std::fstream& file)
   if ((res.sheet_events & svg_file_change) and
       (not (res.sheet_events & cursor_pos_change)))
   {
-    throw std::invalid_argument("Error: How come an change of a page is not linked to a change of ");
+    throw std::invalid_argument("Error: How come a change of a page is not linked to a change of ");
   }
+
+  res.midi_messages = get_midi_from_keys_events(res.keys_down, res.keys_up);
 
   return res;
 }
@@ -285,6 +295,40 @@ bin_song_t get_song(const std::string& filename)
     throw std::invalid_argument("Error: invalid file (extra bytes after end of data)");
   }
 
+  // All cursor changes have been translated into an _almost_ svg file. They are missing
+  // the first line at this point. Therefore, process go through all the events to add
+  // the first line to all of them.
+  std::string current_first_line;
+  for (auto& elt : res.events)
+  {
+    if ((elt.sheet_events & has_event::svg_file_change) != 0)
+    {
+      const auto& this_sheet = res.svg_files[ elt.new_svg_file ];
+      current_first_line = get_first_svg_line(this_sheet.data);;
+    }
+
+    if ((elt.sheet_events & has_event::cursor_pos_change) != 0)
+    {
+      const auto tmp = std::move(elt.new_cursor_box);
+      elt.new_cursor_box = current_first_line.c_str();
+      elt.new_cursor_box += tmp;
+    }
+  }
+
+  // sanity check: make sure parsing the cursor_boxes won't cause any problem
+  for (const auto& elt : res.events)
+  {
+    if ((elt.sheet_events & has_event::svg_file_change) != 0)
+    {
+      QSvgRenderer renderer;
+      const auto is_load_successfull = renderer.load(elt.new_cursor_box);
+      if (not is_load_successfull)
+      {
+	throw std::runtime_error(std::string{"Error: Failed to read cursor box. Data is "} +
+				 elt.new_cursor_box.data() + "\n");
+      }
+    }
+  }
 
   return res;
 }

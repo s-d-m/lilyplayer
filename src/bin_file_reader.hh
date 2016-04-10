@@ -4,6 +4,7 @@
 #include <vector>
 #include <cstdint>
 #include <string>
+#include <QByteArray>
 
 #include "utils.hh"
 
@@ -25,33 +26,29 @@ enum has_event : uint8_t
     svg_file_change   = 1 << 2,
 } FLAG_ENUM_ATTRIBUTE;
 
-struct cursor_box_t
-{
-    uint32_t left;
-    uint32_t right;
-    uint32_t top;
-    uint32_t bottom;
-};
-
 struct music_sheet_event
 {
     music_sheet_event()
       : time()
       , keys_down()
       , keys_up()
-      , sheet_events()
+      , midi_messages()
       , new_cursor_box()
+      , sheet_events()
       , new_bar_number()
       , new_svg_file()
     {
     }
 
+    ~music_sheet_event() = default;
+
     uint64_t time; // occuring time relative to beginning of the song
 		   // (in ns)
     std::vector<key_down> keys_down;
     std::vector<key_up>   keys_up;
+    std::vector<midi_message_t> midi_messages;
+    QByteArray new_cursor_box;
     enum has_event sheet_events;
-    cursor_box_t new_cursor_box;
     uint16_t new_bar_number;
     uint16_t new_svg_file;
 };
