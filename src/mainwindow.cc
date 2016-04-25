@@ -142,7 +142,7 @@ void MainWindow::song_event_loop()
     return;
   }
 
-  const auto nb_events = this->song.events.size();
+  const auto nb_events = this->song.nb_events;
   if (song_pos == nb_events)
   {
     stop_song();

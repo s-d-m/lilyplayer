@@ -67,12 +67,15 @@ struct bin_song_t
 {
     bin_song_t()
       : events()
+      , nb_events()
       , instr_names()
       , svg_files ()
     {
     }
 
     std::vector<music_sheet_event> events;
+    unsigned nb_events; // stores the number of events to avoid
+			// calling events.size() at each loop
     std::vector<std::string> instr_names;
     std::vector<svg_data> svg_files;
 };

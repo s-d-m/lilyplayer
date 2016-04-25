@@ -331,5 +331,7 @@ bin_song_t get_song(const std::string& filename)
     }
   }
 
+  res.nb_events = res.events.size();
+
   return res;
 }
