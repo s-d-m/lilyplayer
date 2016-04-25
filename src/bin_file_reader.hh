@@ -40,8 +40,6 @@ struct music_sheet_event
     {
     }
 
-    ~music_sheet_event() = default;
-
     uint64_t time; // occuring time relative to beginning of the song
 		   // (in ns)
     std::vector<key_down> keys_down;
