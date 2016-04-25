@@ -136,7 +136,7 @@ void MainWindow::process_music_sheet_event(const music_sheet_event& event)
 
 void MainWindow::song_event_loop()
 {
-  if (is_in_pause.load() or (song_pos == INVALID_SONG_POS))
+  if (is_in_pause or (song_pos == INVALID_SONG_POS))
   {
     QTimer::singleShot(100, this, SLOT(song_event_loop()));
     return;
@@ -575,10 +575,8 @@ MainWindow::MainWindow(QWidget *parent) :
   song(),
   sound_player(RtMidi::LINUX_ALSA),
   sound_listener(RtMidi::LINUX_ALSA),
-  is_in_pause()
+  is_in_pause(true)
 {
-  atomic_init(&is_in_pause, true);
-
   ui->setupUi(this);
   ui->keyboard->setRenderHints(QPainter::Antialiasing | QPainter::SmoothPixmapTransform);
   ui->keyboard->setScene(keyboard_scene);
