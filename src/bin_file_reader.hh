@@ -65,7 +65,7 @@ struct bin_song_t
 {
     bin_song_t()
       : events()
-      , nb_events()
+      , nb_events(0)
       , instr_names()
       , svg_files ()
     {
