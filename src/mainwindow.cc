@@ -147,6 +147,7 @@ void MainWindow::song_event_loop()
   {
     stop_song();
     QTimer::singleShot(100, this, SLOT(song_event_loop()));
+    return;
   }
 
   if (song_pos > nb_events)
