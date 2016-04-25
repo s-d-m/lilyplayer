@@ -157,19 +157,10 @@ void MainWindow::song_event_loop()
 
   process_music_sheet_event( song.events[song_pos] );
 
-  if (song_pos + 1 == nb_events)
-  {
-    // wait 3 seconds so that user has time to see the last keys up
-    // before the music sheet disappear
-    QTimer::singleShot(3000, this, SLOT(song_event_loop()));
-  }
-  else
-  {
-    // call this function back for the next event
-    song_pos++;
-    QTimer::singleShot( static_cast<int>((song.events[song_pos].time - song.events[song_pos - 1].time) / 1'000'000), this, SLOT(song_event_loop()) );
-  }
-
+  const auto time_to_wait = static_cast<int>(song.events[song_pos].time);
+  song_pos++;
+  QTimer::singleShot(time_to_wait, this, SLOT(song_event_loop()));
+  return;
 }
 
 void MainWindow::stop_song()
@@ -216,6 +207,16 @@ void MainWindow::open_file(const std::string& filename)
   {
     stop_song();
     this->song = get_song(filename);
+    // compute waiting time
+    for (unsigned i = 0; i + 1 < song.nb_events; ++i)
+    {
+      song.events[i].time = ((song.events[i + 1].time - song.events[i].time) / 1'000'000);
+    }
+    if (song.nb_events > 0)
+    {
+      song.events[ song.nb_events - 1].time = 3000; // to wait 3 seconds after last event
+    }
+
     this->song_pos = 0;
     sound_listener.closePort();
     this->selected_input.clear();
