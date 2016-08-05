@@ -2,7 +2,7 @@
 #include <stdexcept>
 #include <string>
 #include <cstddef> // for std::size_t
-#include <RtMidi.h>
+#include <rtmidi/RtMidi.h>
 #include "utils.hh"
 
 bool is_key_down_event(const std::vector<uint8_t>& data)

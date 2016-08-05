@@ -12,7 +12,7 @@
 
 #include <limits>
 
-#include <RtMidi.h>
+#include <rtmidi/RtMidi.h>
 
 #include "utils.hh"
 #include "keyboard.hh"
