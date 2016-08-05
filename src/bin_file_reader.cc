@@ -27,7 +27,7 @@ static bool is_header_correct(std::fstream& file, const char expected[4])
   char buffer[4];
   file.read(buffer, sizeof(buffer));
 
-  return (file.gcount() == sizeof(buffer)) and
+  return (static_cast<unsigned>(file.gcount()) == sizeof(buffer)) and
     (std::memcmp(buffer, expected, sizeof(buffer)) == 0);
 }
 
