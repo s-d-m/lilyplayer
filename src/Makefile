@@ -200,7 +200,7 @@ define specific_flags
  $(if $(findstring clang,$(CXX)),\
    $(if $(findstring "resources.o",$(1)),-Wno-exit-time-destructors -Wno-global-constructors,)\
    $(if $(findstring "moc_mainwindow.o",$(1)),-Wno-undefined-reinterpret-cast,)\
-  )
+  , $(if $(findstring "moc_mainwindow.o",$(1)),-Wno-useless-cast,))
 endef
 
 %.o: %.cc ${FORMS_HEADERS}
@@ -211,8 +211,7 @@ endef
 	   rm -f $*.d
 
 moc_%.cc: %.hh ui_%.hh
-	${MOC} ${QT_DEFINES} ${QT_INCLUDES:-isystem=-I} -o "$@" "$<" && \
-	sed -i '1i // Avoid warnings on generated file\n#if !defined(__clang__)\n  #pragma GCC diagnostic error "-w"\n#endif\n' "$@"
+	${MOC} ${QT_DEFINES} ${QT_INCLUDES:-isystem=-I} -o "$@" "$<"
 
 ui_%.hh: %.ui
 	${UIC} -o "$@" "$<" && \
