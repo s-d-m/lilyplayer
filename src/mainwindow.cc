@@ -271,7 +271,11 @@ void MainWindow::open_file(const std::string& filename)
 
 void MainWindow::open_file()
 {
-  const QStringList filters { "Binary files (*.bin)", "Any files (*)"};
+  const QStringList filters = [] () { QStringList tmp;
+				      tmp << "Binary files (*.bin)"
+				          << "Any files (*)";
+				      return tmp;
+				    }();
 
   QFileDialog dialog;
   dialog.setFileMode(QFileDialog::ExistingFile);
