@@ -8,23 +8,12 @@
 
 #include "utils.hh"
 
-#ifndef __has_attribute
-  #define __has_attribute(x) 0  // Compatibility with non-clang compilers.
-#endif
-
-
-#if __has_attribute(flag_enum)
-#define FLAG_ENUM_ATTRIBUTE __attribute__((flag_enum))
-#else
-#define FLAG_ENUM_ATTRIBUTE
-#endif
-
 enum has_event : uint8_t
 {
     bar_number_change = 1 << 0,
     cursor_pos_change = 1 << 1,
     svg_file_change   = 1 << 2,
-} FLAG_ENUM_ATTRIBUTE;
+};
 
 struct music_sheet_event
 {
