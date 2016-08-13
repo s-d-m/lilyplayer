@@ -1,4 +1,4 @@
-dummy := $(shell if (! test -f ./Makefile.vars) ; then ./configure ; fi)
+dummy := $(shell ./configure)
 include Makefile.vars
 
 TARGET_DIR := ../bin
