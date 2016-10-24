@@ -81,20 +81,104 @@ LCOV_FLAGS= --rc lcov_branch_coverage=1 \
 GENHTML = genhtml
 GENHTML_FLAGS = --branch-coverage
 
-GPROF = gprof
-PROFILING_OUTPUT = profiling_output.txt
+TOOLCHAIN=gcc
 
-ifeq ($(findstring clang,$(CXX)), clang)
+CLANG_CC  = clang-4.0
+CLANG_CXX = clang++-4.0
+SCAN_BUILD = scan-build-4.0
+
+ifeq ($(TOOLCHAIN),clang)
+  CXX := ${CLANG_CXX}
   CXX_WARN_FLAGS ?= -Weverything \
 		    -Wno-c++98-compat \
 		    -Wno-c++98-compat-pedantic \
 		    -Wno-c99-extensions \
 		    -Wno-padded # remove padding warning
+  CC := ${CLANG_CC}
+  CC_WARN_FLAGS ?= -Weverything
+
+
+  SANITIZERS = \
+	-fsanitize=address \
+	-fsanitize=undefined \
+
+# -fsanitize=memory \
+# -fsanitize=dataflow \
+# -fsanitize=cfi \
+# -fsanitize=safe-stack
+
+# -fsanitize=thread #is incompatible with sanitize address
+# -fsanitize=leak # leak sanitizer can't be used if either address or thread sanitizer is used
+
+  HARDENING_FLAGS = \
+	-fstack-protector-all \
+	--param ssp-buffer-size=4 \
+	-D_FORTIFY_SOURCE=2 \
+	-fPIC
+
+  LDFLAGS = \
+	-z noexecstack \
+	-z now\
+	-z relro \
+	-z nodlopen \
+	-z nodump
+
 else
+# for gcc 6
+  CC := gcc-6
+  CC_WARN_FLAGS ?= \
+	-Wall \
+	-pedantic -pedantic-errors \
+	-Wextra \
+	-Wdouble-promotion \
+	-Wformat=2 \
+	-Wnull-dereference \
+	-Winit-self \
+	-Wmissing-include-dirs \
+	-Wshift-overflow=2 \
+	-Wswitch-default \
+	-Wswitch-enum \
+	-Wunused-parameter \
+	-Wuninitialized \
+	-Wstrict-aliasing \
+	-Wstrict-overflow=5 \
+	-Wsuggest-attribute=pure \
+	-Wsuggest-attribute=const \
+	-Wsuggest-attribute=noreturn \
+	-Wsuggest-attribute=format \
+	-Wduplicated-cond \
+	-Wtrampolines \
+	-Wfloat-equal \
+	-Wtraditional-conversion \
+	-Wundef \
+	-Wshadow \
+	-funsafe-loop-optimizations \
+	-Wunsafe-loop-optimizations \
+	-Wpointer-arith \
+	-Wbad-function-cast \
+	-Wcast-qual \
+	-Wcast-align \
+	-Wwrite-strings \
+	-Wconversion \
+	-Wjump-misses-init \
+	-Wlogical-op \
+	-Waggregate-return \
+	-Wstrict-prototypes \
+	-Wold-style-definition \
+	-Wmissing-prototypes \
+	-Wmissing-declarations \
+	-Wredundant-decls \
+	-Winvalid-pch \
+	-Wvla \
+	-Wunsuffixed-float-constants \
+#	-Wpadded \
+
+  CXX=g++-6
 # for g++ 4.9
   CXX_WARN_FLAGS ?= \
 	-Werror \
 	-Wno-pedantic \
+	-Wpointer-arith \
 	-Wall \
 	-Wextra \
 	-Wformat=2 \
@@ -154,24 +238,52 @@ else
 	-Wbool-compare  \
 	-Wodr \
 	-Wsuggest-final-types \
-	-Wsuggest-final-methods
+	-Wsuggest-final-methods \
+	-Wsuggest-override
+
+# For g++ 6
+  CXX_WARN_FLAGS += \
+	-Wnull-dereference -fdelete-null-pointer-checks \
+	-Wduplicated-cond \
+	-Wplacement-new=2 \
+	-Wconditionally-supported \
+	-fsized-deallocation \
+	-Wsized-deallocation \
+
 
 # sanitizers on g++5.2
   SANITIZERS = \
 	-fsanitize=address \
 	-fsanitize=undefined \
+	-fbounds-check \
 # -fcheck-pointer-bounds -mmpx # pointer checker is not supported with address sanitiser
 # -fsanitize=thread #is incompatible with sanitize address
 # -fsanitize=leak # leak sanitizer can't be used if either address or thread sanitizer is used
 
+  HARDENING_FLAGS = \
+	-fstack-protector-all \
+	--param ssp-buffer-size=4 \
+	-D_FORTIFY_SOURCE=2 \
+	-fPIC
+
+  LDFLAGS = \
+	-pie \
+	-z noexecstack \
+	-z now\
+	-z relro \
+	-z nodlopen \
+	-z nodump
 endif
+
 
 BUILD ?= debug
 
-CXXFLAGS = -std=c++14 -Werror -fPIC ${CXX_WARN_FLAGS} ${SANITIZERS} ${DEFINES}
+CXXFLAGS := -std=c++1z -Werror -fno-rtti -fstrict-enums ${HARDENING_FLAGS} ${CXX_WARN_FLAGS} ${SANITIZERS} ${DEFINES}
 
 ifeq ($(BUILD),release)
-  CXXFLAGS += -O3
+  CXXFLAGS += -O3 -flto
+  CFLAGS += -O3 -flto
+  LDFLAGS += -s
 else
   CXXFLAGS += -O0 -ggdb3
 endif
@@ -184,7 +296,10 @@ ifeq ($(GPROF),1)
   CXXFLAGS += -pg
 endif
 
-SCAN_BUILD = scan-build
+ifeq ($(32_BITS),1)
+  CXXFLAGS += -m32
+endif
+
 
 all: ${TARGET}
 
@@ -218,7 +333,7 @@ ui_%.hh: %.ui
 	sed -i '1i // Avoid warnings on generated headers\n#if !defined(__clang__)\n  #pragma GCC system_header\n#endif\n' "$@"
 
 scan-build:
-	${SCAN_BUILD} -analyze-headers --use-c++=/usr/bin/clang++ --status-bugs --keep-going  make -B
+	${SCAN_BUILD} -analyze-headers --use-c++=${CLANG_CXX} --use-cc=${CLANG_CC} --status-bugs --keep-going  make -B TOOLCHAIN=clang
 
 ${COVERAGE_HTML_DIR}:
 	[ -d "$@" ] || mkdir -p "$@"
