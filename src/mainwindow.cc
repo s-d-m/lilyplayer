@@ -605,7 +605,6 @@ MainWindow::MainWindow(QWidget *parent) :
   current_page_viewbox(),
   cursor_rect(new QSvgRenderer(this)),
   svg_rect(nullptr),
-  current_svg_first_line(),
   signal_checker_timer(),
   song(),
   sound_player(RtMidi::LINUX_ALSA),

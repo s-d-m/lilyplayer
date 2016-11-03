@@ -83,7 +83,6 @@ class MainWindow : public QMainWindow
     QRectF current_page_viewbox;
     QSvgRenderer* cursor_rect;
     QGraphicsSvgItem* svg_rect;
-    std::string current_svg_first_line;
     QTimer signal_checker_timer;
     bin_song_t song;
     RtMidiOut sound_player;
