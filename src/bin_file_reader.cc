@@ -142,6 +142,10 @@ music_sheet_event read_grouped_event(std::fstream& file)
 	  + "\" ry=\"0.0000\" fill=\"currentColor\" fill-opacity=\"0.4\"/></svg>";
 
 	res.new_cursor_box = str.c_str();
+	res.cursor_box_coord = QRectF{ static_cast<qreal>(left) / 10000,
+				      static_cast<qreal>(top) / 10000,
+				      static_cast<qreal>(width) / 10000,
+				      static_cast<qreal>(height) / 10000 };
 
 	res.sheet_events = static_cast<has_event>(res.sheet_events | has_event::cursor_pos_change);
 	break;

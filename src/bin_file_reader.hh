@@ -23,6 +23,7 @@ struct music_sheet_event
       , keys_up()
       , midi_messages()
       , new_cursor_box()
+      , cursor_box_coord()
       , sheet_events()
       , new_bar_number()
       , new_svg_file()
@@ -35,6 +36,7 @@ struct music_sheet_event
     std::vector<key_up>   keys_up;
     std::vector<midi_message_t> midi_messages;
     QByteArray new_cursor_box;
+    QRectF cursor_box_coord;
     enum has_event sheet_events;
     uint16_t new_bar_number;
     uint16_t new_svg_file;

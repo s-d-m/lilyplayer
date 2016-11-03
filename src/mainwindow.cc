@@ -108,6 +108,7 @@ void MainWindow::display_music_sheet(const unsigned music_sheet_pos)
   music_sheet_scene->addItem(svg_rect);
 
   QByteArray svg_str_rectangle (rendered_sheets[music_sheet_pos].svg_first_line.c_str());
+  current_page_viewbox = rendered_sheets[music_sheet_pos].rendered->viewBoxF();
   svg_str_rectangle +=
     "<rect x=\"0.0000\" y=\"0.0000\" width=\"0.0000\" height=\"0.0000\""
     " ry=\"0.0000\" fill=\"currentColor\" fill-opacity=\"0.4\"/></svg>";
@@ -131,6 +132,34 @@ void MainWindow::process_music_sheet_event(const music_sheet_event& event)
   if (has_cursor_pos_change)
   {
     cursor_rect->load(event.new_cursor_box);
+
+    const auto scene_bounding_rect = svg_rect->sceneBoundingRect();
+    const auto scene_bounding_rect_height = scene_bounding_rect.height();
+    const auto half_cursor_box_height = event.cursor_box_coord.height() / 2;
+    const auto current_page_viewbox_height = current_page_viewbox.height();
+
+    const auto to_scene_y = [&] (const auto y) {
+      return y * scene_bounding_rect_height / current_page_viewbox_height;
+    };
+
+    const auto rect_to_center = QRectF{scene_bounding_rect.left(),
+				       to_scene_y(std::max(event.cursor_box_coord.top() - half_cursor_box_height, 0.0)),
+				       scene_bounding_rect.width(),
+				       to_scene_y(3 * half_cursor_box_height)};
+
+    const auto window = this->window();
+    if (window == nullptr)
+    {
+      throw std::runtime_error("Couldn't find the window");
+    }
+
+    const auto music_sheet_view = window->findChild<QGraphicsView*>("music_sheet");
+    if (music_sheet_view == nullptr)
+    {
+      throw std::runtime_error("Couldn't find the music_sheet_view");
+    }
+
+    music_sheet_scene->setSceneRect(rect_to_center);
   }
 }
 
@@ -573,6 +602,7 @@ MainWindow::MainWindow(QWidget *parent) :
   keyboard(*keyboard_scene),
   music_sheet_scene(new QGraphicsScene(this)),
   rendered_sheets(),
+  current_page_viewbox(),
   cursor_rect(new QSvgRenderer(this)),
   svg_rect(nullptr),
   current_svg_first_line(),

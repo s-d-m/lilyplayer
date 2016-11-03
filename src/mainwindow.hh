@@ -80,6 +80,7 @@ class MainWindow : public QMainWindow
     keys_rects keyboard;
     QGraphicsScene *music_sheet_scene;
     std::vector<sheet_property> rendered_sheets;
+    QRectF current_page_viewbox;
     QSvgRenderer* cursor_rect;
     QGraphicsSvgItem* svg_rect;
     std::string current_svg_first_line;
