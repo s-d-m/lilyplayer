@@ -4,6 +4,7 @@
 #include <cstddef> // for std::size_t
 #include <rtmidi/RtMidi.h>
 #include "utils.hh"
+#include "bin_file_reader.hh"
 
 bool is_key_down_event(const std::vector<uint8_t>& data)
 {
@@ -249,4 +250,42 @@ std::string get_first_svg_line(const std::vector<uint8_t>& data)
   }
 
   return std::string{sheet_data, closing_angle_pos + 1};
+}
+
+
+uint16_t find_last_measure(const std::vector<music_sheet_event>& events)
+{
+  const auto it = std::find_if(events.crbegin(), events.crend(), [] (const auto& elt) {
+	return elt.has_bar_number_change();
+  });
+
+  if (it == events.crbegin())
+  {
+    throw std::runtime_error("Error: couldn't find the last measure number of the music sheet");
+  }
+
+  return it->new_bar_number;
+}
+
+
+uint16_t find_music_sheet_pos(const std::vector<music_sheet_event>& events, unsigned int event_pos)
+{
+  if (event_pos >= events.size())
+  {
+    throw std::runtime_error("Error: trying to find in which page appears an out-of-bound event");
+  }
+
+  const auto last_event = events.size() - 1;
+  const auto dst_to_end = static_cast<std::vector<music_sheet_event>::difference_type>(last_event - event_pos);
+
+  const auto it = std::find_if(std::next(events.crbegin(), dst_to_end), events.crend(), [] (const auto& elt) {
+    return elt.has_svg_file_change();
+  });
+
+  if (it == events.crend())
+  {
+    throw std::runtime_error("Couldn't find the svg_file for some event");
+  }
+
+  return it->new_svg_file;
 }

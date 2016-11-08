@@ -94,5 +94,8 @@ unsigned int get_port(const std::string& s);
 
 std::string get_first_svg_line(const std::vector<uint8_t>& data);
 
+struct music_sheet_event;
+uint16_t find_last_measure(const std::vector<music_sheet_event>& events);
+uint16_t find_music_sheet_pos(const std::vector<music_sheet_event>& events, unsigned int event_pos);
 
 #endif /* UTILS_HH_ */
