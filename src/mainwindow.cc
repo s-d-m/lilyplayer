@@ -7,6 +7,7 @@
 #include <QGraphicsRectItem>
 #include "mainwindow.hh"
 #include "ui_mainwindow.hh"
+#include "measures_sequence_extractor.hh"
 
 // Global variables to "share" state between the signal handler and
 // the main event loop.  Only these two pieces should be allowed to
@@ -169,15 +170,14 @@ void MainWindow::song_event_loop()
     return;
   }
 
-  const auto nb_events = this->song.nb_events;
-  if (song_pos == nb_events)
+  if (song_pos == stop_pos)
   {
     stop_song();
     QTimer::singleShot(100, this, SLOT(song_event_loop()));
     return;
   }
 
-  if (song_pos > nb_events)
+  if (song_pos > song.nb_events)
   {
     throw std::runtime_error("Invalid song position found");
   }
@@ -193,6 +193,13 @@ void MainWindow::song_event_loop()
 void MainWindow::stop_song()
 {
   this->is_in_pause = true;
+
+  this->ui->start_measure->setMinimum(1);
+  this->ui->start_measure->setValue(1);
+  this->ui->start_measure->setMaximum(1);
+  this->ui->stop_measure->setMinimum(1);
+  this->ui->stop_measure->setMaximum(1);
+  this->ui->stop_measure->setValue(1);
 
   music_sheet_scene->clear();
   const auto nb_rendered = rendered_sheets.size();
@@ -222,6 +229,8 @@ void MainWindow::stop_song()
   // reinitialise the song field
   this->song = bin_song_t();
   this->song_pos = INVALID_SONG_POS;
+  this->start_pos = INVALID_SONG_POS;
+  this->stop_pos = INVALID_SONG_POS;
 
   // reset all keys to up on the keyboard (doesn't play key_released events).
   reset_color(keyboard);
@@ -234,6 +243,17 @@ void MainWindow::open_file(const std::string& filename)
   {
     stop_song();
     this->song = get_song(filename);
+    this->start_pos = 0;
+    this->stop_pos = static_cast<decltype(stop_pos)>(this->song.nb_events);
+
+    const auto max_measure = find_last_measure(song.events);
+    this->ui->start_measure->setMinimum(1);
+    this->ui->start_measure->setValue(1);
+    this->ui->start_measure->setMaximum(max_measure);
+    this->ui->stop_measure->setMinimum(1);
+    this->ui->stop_measure->setMaximum(max_measure);
+    this->ui->stop_measure->setValue(max_measure);
+
     // compute waiting time
     for (unsigned i = 0; i + 1 < song.nb_events; ++i)
     {
@@ -244,7 +264,7 @@ void MainWindow::open_file(const std::string& filename)
       song.events[ song.nb_events - 1].time = 3000; // to wait 3 seconds after last event
     }
 
-    this->song_pos = 0;
+    this->song_pos = this->start_pos;
     sound_listener.closePort();
     this->selected_input.clear();
 
@@ -321,6 +341,36 @@ void MainWindow::open_file()
       open_file(filename);
     }
   }
+}
+
+void MainWindow::on_sub_sequence_click()
+{
+  is_in_pause = true;
+
+  const auto start_measure = this->ui->start_measure->value();
+  const auto stop_measure = this->ui->stop_measure->value();
+  const auto sequences = get_measures_sequence_pos(song,
+						   static_cast<unsigned short>(start_measure),
+						   static_cast<unsigned short>(stop_measure));
+
+  if (sequences.empty())
+  {
+    std::cerr << "Error, no sequence going from measure " << start_measure << " to measure " << stop_measure << " found\n";
+  }
+  else
+  {
+    if (sequences.size() != 1)
+    {
+      std::cerr << "several possibilities found. picking first one\n";
+    }
+
+    this->song_pos = static_cast<decltype(song_pos)>(sequences[0].first);
+    this->stop_pos = static_cast<decltype(song_pos)>(sequences[0].second);
+    const auto music_sheet_pos = find_music_sheet_pos(song.events, song_pos);
+    display_music_sheet(music_sheet_pos);
+    is_in_pause = false;
+  }
+
 }
 
 void MainWindow::set_output_port(const unsigned int i)
@@ -673,6 +723,10 @@ MainWindow::MainWindow(QWidget *parent) :
   {
     qRegisterMetaType<std::vector<unsigned char>>("std::vector<unsigned char>");
     connect(this, SIGNAL(midi_message_received(std::vector<unsigned char>)), this, SLOT(handle_input_midi(std::vector<unsigned char>)));
+  }
+
+  {
+    connect(this->ui->Playsubsequence, SIGNAL(clicked()), this, SLOT(on_sub_sequence_click()));
   }
 
   {

@@ -132,7 +132,10 @@ get_measures_sequence_pos(const bin_song_t& song,
   {
     for (const auto end : end_positions)
     {
-      res.push_back({start, end});
+      if (end > start)
+      {
+	res.push_back({start, end});
+      }
     }
   }
 
