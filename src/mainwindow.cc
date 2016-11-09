@@ -121,15 +121,13 @@ void MainWindow::process_music_sheet_event(const music_sheet_event& event)
   this->process_keyboard_event(event.keys_down, event.keys_up, event.midi_messages);
 
   // is there a svg file change?
-  const auto has_svg_file_change = ((event.sheet_events & has_event::svg_file_change) != 0);
-  if (has_svg_file_change)
+  if (event.has_svg_file_change())
   {
     display_music_sheet(event.new_svg_file);
   }
 
   // is there a cursor pos change here?
-  const auto has_cursor_pos_change = ((event.sheet_events & has_event::cursor_pos_change) != 0);
-  if (has_cursor_pos_change)
+  if (event.has_cursor_pos_change())
   {
     cursor_rect->load(event.new_cursor_box);
 

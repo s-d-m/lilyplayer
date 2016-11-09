@@ -5,6 +5,7 @@
 #include <cstdint>
 #include <string>
 #include <QByteArray>
+#include <QRectF>
 
 #include "utils.hh"
 
@@ -24,7 +25,7 @@ struct music_sheet_event
       , midi_messages()
       , new_cursor_box()
       , cursor_box_coord()
-      , sheet_events()
+      , sheet_events(static_cast<has_event>(0))
       , new_bar_number()
       , new_svg_file()
     {
@@ -37,9 +38,48 @@ struct music_sheet_event
     std::vector<midi_message_t> midi_messages;
     QByteArray new_cursor_box;
     QRectF cursor_box_coord;
+  private:
     enum has_event sheet_events;
+  public:
     uint16_t new_bar_number;
     uint16_t new_svg_file;
+
+    bool has_bar_number_change() const
+    {
+      return (sheet_events & has_event::bar_number_change) != 0;
+    }
+
+    bool has_cursor_pos_change() const
+    {
+      return (sheet_events & has_event::cursor_pos_change) != 0;
+    }
+
+    bool has_svg_file_change() const
+    {
+      return (sheet_events & has_event::svg_file_change) != 0;
+    }
+
+    // todo add overload that takes parameter with move semantics
+    void add_cursor_change(const char * const _new_cursor_box, const QRectF& _cursor_box_coord)
+    {
+      new_cursor_box = _new_cursor_box;
+      cursor_box_coord = _cursor_box_coord;
+      sheet_events = static_cast<has_event>(sheet_events | has_event::cursor_pos_change);
+    }
+
+    void add_svg_file_change(const uint16_t new_svg_file_pos)
+    {
+      new_svg_file = new_svg_file_pos;
+      sheet_events = static_cast<has_event>(sheet_events | has_event::svg_file_change);
+    }
+
+    void add_bar_number_change(const uint16_t _new_bar_number)
+    {
+      new_bar_number = _new_bar_number;
+      sheet_events = static_cast<has_event>(sheet_events | has_event::bar_number_change);
+    }
+
+
 };
 
 struct svg_data

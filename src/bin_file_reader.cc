@@ -60,8 +60,6 @@ music_sheet_event read_grouped_event(std::fstream& file)
     throw std::invalid_argument("Error: a group of events must have at least one event!");
   }
 
-  res.sheet_events = static_cast<decltype(res.sheet_events)>(0);
-
   for (auto i = decltype(nb_events){0} ; i < nb_events; ++i)
   {
     const auto event_id = read_big_endian<uint8_t>(file);
@@ -94,19 +92,18 @@ music_sheet_event read_grouped_event(std::fstream& file)
 
       case event_type::set_bar_number:
       {
-	if (res.sheet_events & has_event::bar_number_change)
+	if (res.has_bar_number_change())
 	{
 	  throw std::invalid_argument("Error: two 'bar number change' happening in the same music-sheet event");
 	}
 
-	res.new_bar_number = read_big_endian<uint16_t>(file);
-	res.sheet_events = static_cast<has_event>(res.sheet_events | has_event::bar_number_change);
+	res.add_bar_number_change(read_big_endian<uint16_t>(file));
 	break;
       }
 
       case event_type::set_cursor:
       {
-	if (res.sheet_events & has_event::cursor_pos_change)
+	if (res.has_cursor_pos_change())
 	{
 	  throw std::invalid_argument("Error: two 'cursor pos change' happening in the same music-sheet event");
 	}
@@ -141,25 +138,21 @@ music_sheet_event read_grouped_event(std::fstream& file)
 	  + to_dotted_str(width) + "\" height=\"" + to_dotted_str(height)
 	  + "\" ry=\"0.0000\" fill=\"currentColor\" fill-opacity=\"0.4\"/></svg>";
 
-	res.new_cursor_box = str.c_str();
-	res.cursor_box_coord = QRectF{ static_cast<qreal>(left) / 10000,
-				      static_cast<qreal>(top) / 10000,
-				      static_cast<qreal>(width) / 10000,
-				      static_cast<qreal>(height) / 10000 };
-
-	res.sheet_events = static_cast<has_event>(res.sheet_events | has_event::cursor_pos_change);
+	res.add_cursor_change(str.c_str(), QRectF{ static_cast<qreal>(left) / 10000,
+						   static_cast<qreal>(top) / 10000,
+						   static_cast<qreal>(width) / 10000,
+						   static_cast<qreal>(height) / 10000 } );
 	break;
       }
 
       case event_type::set_svg_file:
       {
-	if (res.sheet_events & has_event::svg_file_change)
+	if (res.has_svg_file_change())
 	{
 	  throw std::invalid_argument("Error: two 'file change' happening in the same music-sheet event");
 	}
 
-	res.new_svg_file = read_big_endian<uint16_t>(file);
-	res.sheet_events = static_cast<has_event>(res.sheet_events | has_event::svg_file_change);
+	res.add_svg_file_change(read_big_endian<uint16_t>(file));
 	break;
       }
 
@@ -168,8 +161,7 @@ music_sheet_event read_grouped_event(std::fstream& file)
     }
   }
 
-  if ((res.sheet_events & svg_file_change) and
-      (not (res.sheet_events & cursor_pos_change)))
+  if (res.has_svg_file_change() and (not res.has_cursor_pos_change()))
   {
     throw std::invalid_argument("Error: How come a change of a page is not linked to a change of "
 				"cursor pos");
@@ -277,7 +269,7 @@ bin_song_t get_song(const std::string& filename)
   // // reason it is not used is that some version of g++ segfault when compiling this code.
   // // therefore, check from time to time if an updated version of g++ fixed this bug.
   // const auto is_missing_svgs = std::any_of(res.events.cbegin(), res.events.cend(), [=] (const auto& ev) {
-  //     return ((ev.sheet_events & has_event::svg_file_change) != 0) and (ev.new_svg_file >= nb_svg_files);
+  //     return ev.sheet_events.has_svg_file_change() and (ev.new_svg_file >= nb_svg_files);
   //   });
   // if (is_missing_svgs)
   // {
@@ -285,8 +277,7 @@ bin_song_t get_song(const std::string& filename)
   // }
   for (const auto& elt : res.events)
   {
-    if (((elt.sheet_events & has_event::svg_file_change) != 0) and
-	(elt.new_svg_file >= nb_svg_files))
+    if (elt.has_svg_file_change() and (elt.new_svg_file >= nb_svg_files))
     {
       throw std::runtime_error("Error: the file is missing some pages of the music sheet inside");
     }
@@ -306,13 +297,13 @@ bin_song_t get_song(const std::string& filename)
   std::string current_first_line;
   for (auto& elt : res.events)
   {
-    if ((elt.sheet_events & has_event::svg_file_change) != 0)
+    if (elt.has_svg_file_change())
     {
       const auto& this_sheet = res.svg_files[ elt.new_svg_file ];
       current_first_line = get_first_svg_line(this_sheet.data);;
     }
 
-    if ((elt.sheet_events & has_event::cursor_pos_change) != 0)
+    if (elt.has_cursor_pos_change())
     {
       const auto tmp = std::move(elt.new_cursor_box);
       elt.new_cursor_box = current_first_line.c_str();
@@ -323,7 +314,7 @@ bin_song_t get_song(const std::string& filename)
   // sanity check: make sure parsing the cursor_boxes won't cause any problem
   for (const auto& elt : res.events)
   {
-    if ((elt.sheet_events & has_event::svg_file_change) != 0)
+    if (elt.has_svg_file_change())
     {
       QSvgRenderer renderer;
       const auto is_load_successfull = renderer.load(elt.new_cursor_box);
