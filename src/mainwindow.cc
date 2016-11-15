@@ -663,8 +663,8 @@ void MainWindow::update_input_entries()
 }
 
 
-#pragma GCC diagnostic push
 #if !defined(__clang__)
+  #pragma GCC diagnostic push
   #pragma GCC diagnostic ignored "-Wzero-as-null-pointer-constant" // Qt is not effective-C++ friendy
 #endif
 
@@ -763,7 +763,9 @@ MainWindow::MainWindow(QWidget *parent) :
   }
 }
 
-#pragma GCC diagnostic pop
+#if !defined(__clang__)
+  #pragma GCC diagnostic pop
+#endif
 
 MainWindow::~MainWindow()
 {
