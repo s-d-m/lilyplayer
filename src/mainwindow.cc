@@ -35,7 +35,7 @@ void MainWindow::look_for_signals_change()
   if (pause_requested)
   {
     pause_requested = 0;
-    is_in_pause = true;
+    pause_music();
   }
 
   if (continue_requested)
@@ -56,7 +56,14 @@ void MainWindow::keyPressEvent(QKeyEvent* event)
       (pressed_key == Qt::Key_Pause))
   {
     // toggle play pause
-    is_in_pause = not is_in_pause;
+    if (is_in_pause)
+    {
+      is_in_pause = false;
+    }
+    else
+    {
+      pause_music();
+    }
   }
 }
 
@@ -218,26 +225,27 @@ void MainWindow::clear_music_scheet()
   this->update();
 }
 
-void MainWindow::stop_song()
+void MainWindow::pause_music()
 {
   this->is_in_pause = true;
 
+  // todo, compute the midi_messages vector at compile time
+  std::vector<key_up> keys;
+  for (auto key = static_cast<uint8_t>(note_kind::la_0); key <= static_cast<uint8_t>(note_kind::do_8); ++key)
   {
-    // just close the output ports, and reopens it. This avoids getting a 'buzzing' noise
-    // being played continuously through the speakers. It also avoids the need to create a
-    // all-keys-up vector to get played through the MIDI output to release the piano keys.
-    sound_player.closePort();
-
-    const auto nb_ports = sound_player.getPortCount();
-    for (unsigned int i = 0; i < nb_ports; ++i)
-    {
-      const auto port_name = sound_player.getPortName(i);
-      if (port_name == selected_output_port)
-      {
-	sound_player.openPort(i);
-      }
-    }
+    keys.push_back(key_up{key});
   }
+
+  const auto midi_messages = get_midi_from_keys_events(std::vector<key_down>(), keys);
+  for (auto message : midi_messages)
+  {
+      sound_player.sendMessage(&message);
+  }
+}
+
+void MainWindow::stop_song()
+{
+  pause_music();
 
   // reset all keys to up on the keyboard (doesn't play key_released events).
   reset_color(keyboard);

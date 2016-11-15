@@ -42,6 +42,7 @@ class MainWindow : public QMainWindow
     void set_input_port(const unsigned int i);
 
   private:
+    void pause_music();
     void stop_song();
     void clear_music_scheet();
     void process_music_sheet_event(const music_sheet_event& keys_event);
