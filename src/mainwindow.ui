@@ -74,6 +74,13 @@
       </property>
      </widget>
     </item>
+    <item>
+     <widget class="QPushButton" name="replay">
+      <property name="text">
+       <string>Play whole song</string>
+      </property>
+     </widget>
+    </item>
     <item alignment="Qt::AlignHCenter|Qt::AlignVCenter">
      <widget class="QGraphicsView" name="keyboard">
       <property name="sizePolicy">

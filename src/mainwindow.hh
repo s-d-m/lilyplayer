@@ -43,6 +43,7 @@ class MainWindow : public QMainWindow
 
   private:
     void stop_song();
+    void clear_music_scheet();
     void process_music_sheet_event(const music_sheet_event& keys_event);
     void display_music_sheet(const unsigned music_sheet_pos);
     void keyPressEvent(QKeyEvent * event) override;
@@ -57,6 +58,7 @@ class MainWindow : public QMainWindow
 
   private slots:
     void song_event_loop();
+    void replay();
     void open_file(); // open the window dialog to select a file
     void look_for_signals_change();
     void output_port_change();
