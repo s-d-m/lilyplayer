@@ -67,7 +67,7 @@ class MainWindow : public QMainWindow
     void update_input_entries();
     void input_change();
     void handle_input_midi(std::vector<unsigned char> bytes);
-    void on_sub_sequence_click();
+    void sub_sequence_click();
 
   private:
     static constexpr const unsigned int INVALID_SONG_POS = std::numeric_limits<unsigned int>::max();

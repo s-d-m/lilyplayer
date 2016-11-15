@@ -367,7 +367,7 @@ void MainWindow::open_file()
   }
 }
 
-void MainWindow::on_sub_sequence_click()
+void MainWindow::sub_sequence_click()
 {
   stop_song();
 
@@ -751,7 +751,7 @@ MainWindow::MainWindow(QWidget *parent) :
   }
 
   {
-    connect(this->ui->Playsubsequence, SIGNAL(clicked()), this, SLOT(on_sub_sequence_click()));
+    connect(this->ui->Playsubsequence, SIGNAL(clicked()), this, SLOT(sub_sequence_click()));
   }
 
   {
