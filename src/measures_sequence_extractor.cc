@@ -41,7 +41,7 @@ get_starting_measure_event_pos(const bin_song_t& song,
     throw std::runtime_error("Postcondition failed: vector should be sorted");
   }
 
-  // sanity check: there should not be two times the same element in the vector.
+  // sanity check: there shouldn't be the same element twice in the vector.
   const auto nb_elts = res.size();
   for (auto i = decltype(nb_elts){0}; i + 1 < nb_elts; ++i)
   {
@@ -111,7 +111,7 @@ get_end_measures_sequence_pos(const bin_song_t& song,
     throw std::runtime_error("Postcondition failed: vector should be sorted");
   }
 
-  // sanity check: there should not be two times the same element in the vector.
+  // sanity check: there shouldn't be twice the same element in the vector.
   const auto nb_elts = res.size();
   for (auto i = decltype(nb_elts){0}; i + 1 < nb_elts; ++i)
   {
