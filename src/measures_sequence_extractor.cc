@@ -80,11 +80,20 @@ get_end_measures_sequence_pos(const bin_song_t& song,
     }
 
     auto it = std::next(events_begin, static_cast<decltype(events_begin)::difference_type>(stop_pos));
-
-    while ((it != events_end) and (not it->has_bar_number_change()))
+    if (it == events_end)
     {
-      ++it;
+      throw std::runtime_error("stop pos iterator should point to the beginning of parameter last_measure");
     }
+
+    if (not it->has_bar_number_change())
+    {
+      throw std::runtime_error("stop pos iterator should point to an event with \"last_measure\" bar number change");
+    }
+
+    // look for the next position with a has_bar_number_change
+    it = std::find_if( std::next(it), events_end, [] (const auto& elt) {
+	return elt.has_bar_number_change();
+      });
 
     if (it == events_end)
     {
