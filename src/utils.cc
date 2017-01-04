@@ -259,7 +259,7 @@ uint16_t find_last_measure(const std::vector<music_sheet_event>& events)
 	return elt.has_bar_number_change();
   });
 
-  if (it == events.crbegin())
+  if (it == events.crend())
   {
     throw std::runtime_error("Error: couldn't find the last measure number of the music sheet");
   }
