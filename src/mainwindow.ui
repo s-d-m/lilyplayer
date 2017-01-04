@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>1245</width>
-    <height>237</height>
+    <height>555</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -58,6 +58,26 @@
       </property>
       <property name="sizeAdjustPolicy">
        <enum>QAbstractScrollArea::AdjustToContents</enum>
+      </property>
+     </widget>
+    </item>
+    <item>
+     <widget class="QSpinBox" name="start_measure"/>
+    </item>
+    <item>
+     <widget class="QSpinBox" name="stop_measure"/>
+    </item>
+    <item>
+     <widget class="QPushButton" name="Playsubsequence">
+      <property name="text">
+       <string>Play sub sequence</string>
+      </property>
+     </widget>
+    </item>
+    <item>
+     <widget class="QPushButton" name="replay">
+      <property name="text">
+       <string>Play whole song</string>
       </property>
      </widget>
     </item>
@@ -142,7 +162,7 @@
    </widget>
    <widget class="QMenu" name="menuOutput_port">
     <property name="title">
-     <string>ou&amp;tput port</string>
+     <string>o&amp;utput port</string>
     </property>
    </widget>
    <widget class="QMenu" name="menuInput">
@@ -156,7 +176,7 @@
   </widget>
   <action name="actionClose">
    <property name="text">
-    <string>Close</string>
+    <string>&amp;Close</string>
    </property>
    <property name="toolTip">
     <string>Close application</string>
@@ -167,7 +187,7 @@
   </action>
   <action name="actionOpen">
    <property name="text">
-    <string>Open</string>
+    <string>&amp;Open</string>
    </property>
    <property name="toolTip">
     <string>Open a midi file</string>

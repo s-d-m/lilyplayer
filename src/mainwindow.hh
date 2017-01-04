@@ -42,7 +42,9 @@ class MainWindow : public QMainWindow
     void set_input_port(const unsigned int i);
 
   private:
+    void pause_music();
     void stop_song();
+    void clear_music_scheet();
     void process_music_sheet_event(const music_sheet_event& keys_event);
     void display_music_sheet(const unsigned music_sheet_pos);
     void keyPressEvent(QKeyEvent * event) override;
@@ -57,6 +59,7 @@ class MainWindow : public QMainWindow
 
   private slots:
     void song_event_loop();
+    void replay();
     void open_file(); // open the window dialog to select a file
     void look_for_signals_change();
     void output_port_change();
@@ -64,9 +67,10 @@ class MainWindow : public QMainWindow
     void update_input_entries();
     void input_change();
     void handle_input_midi(std::vector<unsigned char> bytes);
+    void sub_sequence_click();
 
   private:
-    static constexpr unsigned int INVALID_SONG_POS = std::numeric_limits<unsigned int>::max();
+    static constexpr const unsigned int INVALID_SONG_POS = std::numeric_limits<unsigned int>::max();
 
   private:
     struct sheet_property
@@ -89,8 +93,12 @@ class MainWindow : public QMainWindow
     RtMidiIn  sound_listener;
     std::string selected_output_port = "";
     std::string selected_input = "";
+
+
+    unsigned int start_pos = INVALID_SONG_POS;
+    unsigned int stop_pos = INVALID_SONG_POS;
     unsigned int song_pos = INVALID_SONG_POS;
-    bool is_in_pause;
+    std::atomic<bool> is_in_pause;
 };
 
 #pragma GCC diagnostic pop

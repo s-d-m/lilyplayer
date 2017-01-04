@@ -7,6 +7,7 @@
 #include <QGraphicsRectItem>
 #include "mainwindow.hh"
 #include "ui_mainwindow.hh"
+#include "measures_sequence_extractor.hh"
 
 // Global variables to "share" state between the signal handler and
 // the main event loop.  Only these two pieces should be allowed to
@@ -34,7 +35,7 @@ void MainWindow::look_for_signals_change()
   if (pause_requested)
   {
     pause_requested = 0;
-    is_in_pause = true;
+    pause_music();
   }
 
   if (continue_requested)
@@ -55,7 +56,14 @@ void MainWindow::keyPressEvent(QKeyEvent* event)
       (pressed_key == Qt::Key_Pause))
   {
     // toggle play pause
-    is_in_pause = not is_in_pause;
+    if (is_in_pause)
+    {
+      is_in_pause = false;
+    }
+    else
+    {
+      pause_music();
+    }
   }
 }
 
@@ -169,15 +177,14 @@ void MainWindow::song_event_loop()
     return;
   }
 
-  const auto nb_events = this->song.nb_events;
-  if (song_pos == nb_events)
+  if (song_pos == stop_pos)
   {
     stop_song();
     QTimer::singleShot(100, this, SLOT(song_event_loop()));
     return;
   }
 
-  if (song_pos > nb_events)
+  if (song_pos > song.nb_events)
   {
     throw std::runtime_error("Invalid song position found");
   }
@@ -190,9 +197,9 @@ void MainWindow::song_event_loop()
   return;
 }
 
-void MainWindow::stop_song()
+void MainWindow::clear_music_scheet()
 {
-  this->is_in_pause = true;
+  stop_song();
 
   music_sheet_scene->clear();
   const auto nb_rendered = rendered_sheets.size();
@@ -202,38 +209,75 @@ void MainWindow::stop_song()
   }
   rendered_sheets.clear();
 
-  {
-    // just close the output ports, and reopens it. This avoids getting a 'buzzing' noise
-    // being played continuously through the speakers. It also avoids the need to create a
-    // all-keys-up vector to get played through the MIDI output to release the piano keys.
-    sound_player.closePort();
-
-    const auto nb_ports = sound_player.getPortCount();
-    for (unsigned int i = 0; i < nb_ports; ++i)
-    {
-      const auto port_name = sound_player.getPortName(i);
-      if (port_name == selected_output_port)
-      {
-	sound_player.openPort(i);
-      }
-    }
-  }
+  this->ui->start_measure->setMinimum(1);
+  this->ui->start_measure->setValue(1);
+  this->ui->start_measure->setMaximum(1);
+  this->ui->stop_measure->setMinimum(1);
+  this->ui->stop_measure->setMaximum(1);
+  this->ui->stop_measure->setValue(1);
 
   // reinitialise the song field
   this->song = bin_song_t();
   this->song_pos = INVALID_SONG_POS;
+  this->start_pos = INVALID_SONG_POS;
+  this->stop_pos = INVALID_SONG_POS;
+
+  this->update();
+}
+
+void MainWindow::pause_music()
+{
+  this->is_in_pause = true;
+
+  // todo, compute the midi_messages vector at compile time
+  std::vector<key_up> keys;
+  for (auto key = static_cast<uint8_t>(note_kind::la_0); key <= static_cast<uint8_t>(note_kind::do_8); ++key)
+  {
+    keys.push_back(key_up{key});
+  }
+
+  const auto midi_messages = get_midi_from_keys_events(std::vector<key_down>(), keys);
+  for (auto message : midi_messages)
+  {
+      sound_player.sendMessage(&message);
+  }
+}
+
+void MainWindow::stop_song()
+{
+  pause_music();
 
   // reset all keys to up on the keyboard (doesn't play key_released events).
   reset_color(keyboard);
   this->update();
 }
 
+void MainWindow::replay()
+{
+  stop_song();
+  this->start_pos = 0;
+  this->stop_pos = static_cast<decltype(stop_pos)>(this->song.nb_events);
+  this->song_pos = this->start_pos;
+  is_in_pause = false;
+}
+
 void MainWindow::open_file(const std::string& filename)
 {
   try
   {
-    stop_song();
+    clear_music_scheet();
     this->song = get_song(filename);
+    this->start_pos = 0;
+    this->stop_pos = static_cast<decltype(stop_pos)>(this->song.nb_events);
+
+    const auto max_measure = find_last_measure(song.events);
+    this->ui->start_measure->setMinimum(1);
+    this->ui->start_measure->setValue(1);
+    this->ui->start_measure->setMaximum(max_measure);
+    this->ui->stop_measure->setMinimum(1);
+    this->ui->stop_measure->setMaximum(max_measure);
+    this->ui->stop_measure->setValue(max_measure);
+
     // compute waiting time
     for (unsigned i = 0; i + 1 < song.nb_events; ++i)
     {
@@ -244,7 +288,7 @@ void MainWindow::open_file(const std::string& filename)
       song.events[ song.nb_events - 1].time = 3000; // to wait 3 seconds after last event
     }
 
-    this->song_pos = 0;
+    this->song_pos = this->start_pos;
     sound_listener.closePort();
     this->selected_input.clear();
 
@@ -292,7 +336,7 @@ void MainWindow::open_file(const std::string& filename)
 			  err_msg,
 			  QMessageBox::Ok,
 			  QMessageBox::Ok);
-    stop_song();
+    clear_music_scheet();
   }
 }
 
@@ -321,6 +365,37 @@ void MainWindow::open_file()
       open_file(filename);
     }
   }
+}
+
+void MainWindow::sub_sequence_click()
+{
+  stop_song();
+
+  const auto start_measure = this->ui->start_measure->value();
+  const auto stop_measure = this->ui->stop_measure->value();
+  const auto sequences = get_measures_sequence_pos(song,
+						   static_cast<unsigned short>(start_measure),
+						   static_cast<unsigned short>(stop_measure));
+
+  if (sequences.empty())
+  {
+    std::cerr << "Error, no sequence going from measure " << start_measure << " to measure " << stop_measure << " found\n";
+  }
+  else
+  {
+    if (sequences.size() != 1)
+    {
+      std::cerr << "several possibilities found. picking first one\n";
+    }
+
+    this->start_pos = static_cast<decltype(song_pos)>(sequences[0].first);
+    this->stop_pos = static_cast<decltype(song_pos)>(sequences[0].second);
+    this->song_pos = this->start_pos;
+    const auto music_sheet_pos = find_music_sheet_pos(song.events, song_pos);
+    display_music_sheet(music_sheet_pos);
+    is_in_pause = false;
+  }
+
 }
 
 void MainWindow::set_output_port(const unsigned int i)
@@ -498,7 +573,7 @@ void MainWindow::input_change()
     {
       if (button->isChecked())
       {
-	this->stop_song();
+	this->clear_music_scheet();
 	this->selected_input = button->text().toStdString();
 	const auto nb_ports = sound_listener.getPortCount();
 	for (unsigned int i = 0; i < nb_ports; ++i)
@@ -588,8 +663,8 @@ void MainWindow::update_input_entries()
 }
 
 
-#pragma GCC diagnostic push
 #if !defined(__clang__)
+  #pragma GCC diagnostic push
   #pragma GCC diagnostic ignored "-Wzero-as-null-pointer-constant" // Qt is not effective-C++ friendy
 #endif
 
@@ -676,15 +751,25 @@ MainWindow::MainWindow(QWidget *parent) :
   }
 
   {
+    connect(this->ui->Playsubsequence, SIGNAL(clicked()), this, SLOT(sub_sequence_click()));
+  }
+
+  {
+    connect(this->ui->replay, SIGNAL(clicked()), this, SLOT(replay()));
+  }
+
+  {
     song_event_loop();
   }
 }
 
-#pragma GCC diagnostic pop
+#if !defined(__clang__)
+  #pragma GCC diagnostic pop
+#endif
 
 MainWindow::~MainWindow()
 {
-  stop_song();
+  clear_music_scheet();
   delete ui;
   sound_player.closePort();
 }
