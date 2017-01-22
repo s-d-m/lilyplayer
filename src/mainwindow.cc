@@ -583,9 +583,7 @@ void MainWindow::update_input_entries()
 
   {
     // add the file entry in the input menu.
-    std::string label { "select file" };
-    const auto Qlabel = QString::fromStdString( label );
-    auto button = menu_input->addAction(Qlabel);
+    auto button = menu_input->addAction("select file");
 
     button->setActionGroup(action_group);
     connect(button, SIGNAL(triggered()), this, SLOT(open_file()));
