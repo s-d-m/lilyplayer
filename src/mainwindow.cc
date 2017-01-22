@@ -544,8 +544,8 @@ void MainWindow::set_input_port(unsigned int i)
   const auto port_name = sound_listener.getPortName(i);
   this->selected_input = port_name;
   sound_listener.closePort();
-  sound_listener.openPort(i);
   sound_listener.setCallback(&MainWindow::on_midi_input, this);
+  sound_listener.openPort(i);
 }
 
 
