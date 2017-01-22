@@ -231,6 +231,8 @@ void MainWindow::pause_music()
 
   // todo, compute the midi_messages vector at compile time
   std::vector<key_up> keys;
+  constexpr const uint8_t nb_keys = static_cast<uint8_t>(note_kind::do_8) - static_cast<uint8_t>(note_kind::la_0) + 1;
+  keys.reserve(nb_keys);
   for (auto key = static_cast<uint8_t>(note_kind::la_0); key <= static_cast<uint8_t>(note_kind::do_8); ++key)
   {
     keys.push_back(key_up{key});
