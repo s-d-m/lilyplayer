@@ -514,7 +514,7 @@ void MainWindow::update_output_ports()
   }
 }
 
-void MainWindow::handle_input_midi(std::vector<unsigned char> message)
+void MainWindow::handle_input_midi(const std::vector<unsigned char> message)
 {
   const auto key_events = midi_to_key_events(message);
   const std::vector<midi_message_t> messages { { message } };

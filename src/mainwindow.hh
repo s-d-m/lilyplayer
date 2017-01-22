@@ -66,7 +66,7 @@ class MainWindow : public QMainWindow
     void update_output_ports();
     void update_input_entries();
     void input_change();
-    void handle_input_midi(std::vector<unsigned char> bytes);
+    void handle_input_midi(const std::vector<unsigned char> bytes);
     void sub_sequence_click();
 
   private:
