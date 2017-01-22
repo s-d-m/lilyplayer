@@ -102,6 +102,7 @@ ifeq ($(TOOLCHAIN),clang)
   SANITIZERS = \
 	-fsanitize=address \
 	-fsanitize=undefined \
+	-fsanitize=integer
 
 # -fsanitize=memory \
 # -fsanitize=dataflow \
