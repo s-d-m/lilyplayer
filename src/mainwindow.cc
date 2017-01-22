@@ -536,7 +536,8 @@ void MainWindow::on_midi_input(double timestamp __attribute__((unused)), std::ve
   }
 
   auto window = static_cast<class MainWindow*>(param);
-  emit window->midi_message_received(*message);
+  window->handle_input_midi(*message);
+  message->clear();
 }
 
 void MainWindow::set_input_port(unsigned int i)
