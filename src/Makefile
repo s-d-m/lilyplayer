@@ -119,6 +119,7 @@ ifeq ($(TOOLCHAIN),clang)
 	-fPIC
 
   LDFLAGS = \
+	-pie \
 	-z noexecstack \
 	-z now\
 	-z relro \
