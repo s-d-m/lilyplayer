@@ -431,21 +431,7 @@ void MainWindow::set_output_port(const unsigned int i)
 void MainWindow::output_port_change()
 {
   // find out which output port is now checked.
-  auto menu_bar = this->menuBar();
-  if (menu_bar == nullptr)
-  {
-    std::cerr << "Error: couldn't find the menu bar\n";
-    return;
-  }
-
-  auto menu_output_port = menu_bar->findChild<QMenu*>("menuOutput_port",
-						      Qt::FindDirectChildrenOnly);
-  if (menu_output_port == nullptr)
-  {
-    std::cerr << "Error: couldn't find the output ports menu\n";
-    return;
-  }
-
+  auto menu_output_port = ui->menuOutput_port;
   auto button_list = menu_output_port->findChildren<QAction*>(QString(), Qt::FindDirectChildrenOnly);
   for (auto& button : button_list)
   {
@@ -468,22 +454,6 @@ void MainWindow::output_port_change()
 
 void MainWindow::update_output_ports()
 {
-  // find out which output port is now checked.
-  auto menu_bar = this->menuBar();
-  if (menu_bar == nullptr)
-  {
-    std::cerr << "Error: couldn't find the menu bar\n";
-    return;
-  }
-
-  auto menu_output_port = menu_bar->findChild<QMenu*>("menuOutput_port",
-						      Qt::FindDirectChildrenOnly);
-  if (menu_output_port == nullptr)
-  {
-    std::cerr << "Error: couldn't find the output ports menu\n";
-    return;
-  }
-
   const auto nb_ports = sound_player.getPortCount();
   if (nb_ports == 0)
   {
@@ -492,6 +462,7 @@ void MainWindow::update_output_ports()
   }
 
   // remove all the children!
+  auto menu_output_port = ui->menuOutput_port;
   menu_output_port->clear();
 
   // find the action group.
@@ -553,21 +524,7 @@ void MainWindow::set_input_port(unsigned int i)
 void MainWindow::input_change()
 {
   // find out which menu item has been clicked.
-  const auto menu_bar = this->menuBar();
-  if (menu_bar == nullptr)
-  {
-    std::cerr << "Error: couldn't find the menu bar\n";
-    return;
-  }
-
-  const auto menu_input = menu_bar->findChild<QMenu*>("menuInput",
-						      Qt::FindDirectChildrenOnly);
-  if (menu_input == nullptr)
-  {
-    std::cerr << "Error: couldn't find the output ports menu\n";
-    return;
-  }
-
+  const auto menu_input = ui->menuInput;
   const auto button_list = menu_input->findChildren<QAction*>(QString(), Qt::FindDirectChildrenOnly);
 
   try
@@ -611,20 +568,7 @@ void MainWindow::input_change()
 void MainWindow::update_input_entries()
 {
   // find out which input is currently selected
-  auto menu_bar = this->menuBar();
-  if (menu_bar == nullptr)
-  {
-    std::cerr << "Error: couldn't find the menu bar\n";
-    return;
-  }
-
-  auto menu_input = menu_bar->findChild<QMenu*>("menuInput",
-						Qt::FindDirectChildrenOnly);
-  if (menu_input == nullptr)
-  {
-    std::cerr << "Error: couldn't find the input menu\n";
-    return;
-  }
+  auto menu_input = ui->menuInput;
 
   // remove all the children!
   menu_input->clear();
@@ -716,17 +660,8 @@ MainWindow::MainWindow(QWidget *parent) :
     // setting up the signal on_output_ports_menu_clicked->update_outputs_ports.
     // update_outputs_ports is the function that fills up the menu entries with all the ports
     // output ports available.
-    auto menu_bar = this->menuBar();
-    auto menu_output_port = menu_bar->findChild<QMenu*>("menuOutput_port",
-							Qt::FindDirectChildrenOnly);
-    if (menu_output_port == nullptr)
-    {
-      std::cerr << "Error: couldn't find the output port menu\n";
-    }
-    else
-    {
-      connect(menu_output_port, SIGNAL(aboutToShow()), this, SLOT(update_output_ports()));
-    }
+    auto menu_output_port = ui->menuOutput_port;
+    connect(menu_output_port, SIGNAL(aboutToShow()), this, SLOT(update_output_ports()));
   }
 
   {
@@ -735,17 +670,8 @@ MainWindow::MainWindow(QWidget *parent) :
     // an important difference between the input_menu and the output_menu is that the input is not necessary
     // a midi input port. It can be a file. And therefore, if there is no midi inputs detected, it's not a problem.
     // and also, there is no need to automatically select an input port.
-    auto menu_bar = this->menuBar();
-    auto menu_input = menu_bar->findChild<QMenu*>("menuInput",
-						  Qt::FindDirectChildrenOnly);
-    if (menu_input == nullptr)
-    {
-      std::cerr << "Error: couldn't find the input menu\n";
-    }
-    else
-    {
-      connect(menu_input, SIGNAL(aboutToShow()), this, SLOT(update_input_entries()));
-    }
+    auto menu_input = ui->menuInput;
+    connect(menu_input, SIGNAL(aboutToShow()), this, SLOT(update_input_entries()));
   }
 
   {
