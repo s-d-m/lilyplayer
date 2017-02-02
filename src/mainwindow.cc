@@ -153,19 +153,7 @@ void MainWindow::process_music_sheet_event(const music_sheet_event& event)
 				       scene_bounding_rect.width(),
 				       to_scene_y(3 * half_cursor_box_height)};
 
-    const auto window = this->window();
-    if (window == nullptr)
-    {
-      throw std::runtime_error("Couldn't find the window");
-    }
-
-    const auto music_sheet_view = window->findChild<QGraphicsView*>("music_sheet");
-    if (music_sheet_view == nullptr)
-    {
-      throw std::runtime_error("Couldn't find the music_sheet_view");
-    }
-
-    music_sheet_scene->setSceneRect(rect_to_center);
+    this->ui->music_sheet->setSceneRect(rect_to_center);
   }
 }
 
