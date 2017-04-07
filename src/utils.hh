@@ -5,6 +5,7 @@
 #include <limits>
 #include <fstream>
 #include <string>
+#include <rtmidi/RtMidi.h>
 
 struct key_down
 {
@@ -97,5 +98,9 @@ std::string get_first_svg_line(const std::vector<uint8_t>& data);
 struct music_sheet_event;
 uint16_t find_last_measure(const std::vector<music_sheet_event>& events);
 uint16_t find_music_sheet_pos(const std::vector<music_sheet_event>& events, unsigned int event_pos);
+
+
+const char* rt_error_type_as_str(RtMidiError::Type value);
+
 
 #endif /* UTILS_HH_ */

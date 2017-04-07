@@ -74,9 +74,12 @@ void MainWindow::process_keyboard_event(const std::vector<key_down>& keys_down,
   update_keyboard(keys_down, keys_up, this->keyboard);
   this->update();
 
-  for (auto message : messages)
+  if (sound_player.isPortOpen())
   {
-    sound_player.sendMessage(&message);
+    for (auto message : messages)
+    {
+      sound_player.sendMessage(&message);
+    }
   }
 }
 
@@ -216,20 +219,23 @@ void MainWindow::clear_music_scheet()
 void MainWindow::pause_music()
 {
   this->is_in_pause = true;
-
-  // todo, compute the midi_messages vector at compile time
-  std::vector<key_up> keys;
-  constexpr const uint8_t nb_keys = static_cast<uint8_t>(note_kind::do_8) - static_cast<uint8_t>(note_kind::la_0) + 1;
-  keys.reserve(nb_keys);
-  for (auto key = static_cast<uint8_t>(note_kind::la_0); key <= static_cast<uint8_t>(note_kind::do_8); ++key)
+  if (sound_player.isPortOpen())
   {
-    keys.push_back(key_up{key});
-  }
+    // todo, compute the midi_messages vector at compile time
+    std::vector<key_up> keys;
+    constexpr const uint8_t nb_keys = static_cast<uint8_t>(note_kind::do_8) - static_cast<uint8_t>(note_kind::la_0) + 1;
+    keys.reserve(nb_keys);
+    for (auto key = static_cast<uint8_t>(note_kind::la_0); key <= static_cast<uint8_t>(note_kind::do_8); ++key)
+    {
+      keys.push_back(key_up{key});
+    }
 
-  const auto midi_messages = get_midi_from_keys_events(std::vector<key_down>(), keys);
-  for (auto message : midi_messages)
-  {
+    const auto midi_messages = get_midi_from_keys_events(std::vector<key_down>(), keys);
+    for (auto message : midi_messages)
+    {
       sound_player.sendMessage(&message);
+    }
+
   }
 }
 
@@ -499,6 +505,16 @@ void MainWindow::on_midi_input(double timestamp __attribute__((unused)), std::ve
   message->clear();
 }
 
+void MainWindow::on_midi_error(RtMidiError::Type type, const std::string &errorText, void *param)
+{
+  const bool is_midi_input = (param == nullptr);
+
+  std::cerr << "Error occured for midi " << (is_midi_input ? "input" : "output") << ":\n"
+	    << "  RtMidi considers this as a " << rt_error_type_as_str(type) << "\n"
+	    << "  it also says: " << errorText << "\n"
+	    << std::endl;
+}
+
 void MainWindow::set_input_port(unsigned int i)
 {
   const auto port_name = sound_listener.getPortName(i);
@@ -508,6 +524,11 @@ void MainWindow::set_input_port(unsigned int i)
   sound_listener.openPort(i);
 }
 
+void MainWindow::close_input_port()
+{
+  sound_listener.cancelCallback();
+  sound_listener.closePort();
+}
 
 void MainWindow::input_change()
 {
@@ -515,25 +536,83 @@ void MainWindow::input_change()
   const auto menu_input = ui->menuInput;
   const auto button_list = menu_input->findChildren<QAction*>(QString(), Qt::FindDirectChildrenOnly);
 
+  const auto nb_checked_button = std::count_if(button_list.cbegin(), button_list.cend(), [] (const auto& button) {
+											   return button->isChecked();
+											 });
+  if (nb_checked_button <= 0)
+  {
+    QMessageBox::critical(this, tr("No clicked button found"),
+			  "The input menu should have a button clicked",
+			  QMessageBox::Ok,
+			  QMessageBox::Ok);
+    return;
+  }
+
+  if (nb_checked_button >= 2)
+  {
+    QMessageBox::critical(this, tr("Too many clicked button found"),
+			  "The input menu should at most one button clicked",
+			  QMessageBox::Ok,
+			  QMessageBox::Ok);
+    return;
+  }
+
+  const auto clicked_button = *std::find_if(button_list.cbegin(), button_list.cend(), [] (const auto& button) {
+											return button->isChecked();
+											 });
+
+  this->clear_music_scheet();
+  this->selected_input = clicked_button->text().toStdString();
+
+  const auto nb_ports_with_selected_input_name = [&] () {
+						   const auto nb_ports = sound_listener.getPortCount();
+						   unsigned int res = 0;
+						   for (unsigned int i = 0; i < nb_ports; ++i)
+						   {
+						     const auto port_name = sound_listener.getPortName(i);
+						     if (port_name == selected_input)
+						     {
+						       ++res;
+						     }
+						   }
+						   return res;
+						 }();
+
+  if (nb_ports_with_selected_input_name >= 2)
+  {
+    QMessageBox::critical(this, tr("Broken invariant detected."),
+			  "More than one input button have the same label.",
+			  QMessageBox::Ok,
+			  QMessageBox::Ok);
+    return;
+  }
+
+  this->close_input_port();
+
+  if (nb_ports_with_selected_input_name <= 0)
+  {
+    // selected input was not a midi port (could be a file)
+    // no need to set the midi input port then
+    return;
+  }
+
+  const auto num_port_with_selected_input_name = [&] () {
+						   const auto nb_ports = sound_listener.getPortCount();
+						   for (unsigned int i = 0; i < nb_ports; ++i)
+						   {
+						     const auto port_name = sound_listener.getPortName(i);
+						     if (port_name == selected_input)
+						     {
+						       return i;
+						     }
+						   }
+						   throw std::runtime_error(std::string{"no midi input port with name ["} + selected_input + "] found");
+						 }();
+
+
   try
   {
-    for (const auto& button : button_list)
-    {
-      if (button->isChecked())
-      {
-	this->clear_music_scheet();
-	this->selected_input = button->text().toStdString();
-	const auto nb_ports = sound_listener.getPortCount();
-	for (unsigned int i = 0; i < nb_ports; ++i)
-	{
-	  const auto port_name = sound_listener.getPortName(i);
-	  if (port_name == selected_input)
-	  {
-	    this->set_input_port(i);
-	  }
-	}
-      }
-    }
+    this->set_input_port(num_port_with_selected_input_name);
   }
   catch (std::exception& e)
   {
@@ -549,6 +628,7 @@ void MainWindow::input_change()
     this->selected_input.clear();
 
     // make sure to close all inputs ports
+    sound_listener.cancelCallback();
     sound_listener.closePort();
   }
 }
@@ -626,6 +706,9 @@ MainWindow::MainWindow(QWidget *parent) :
   connect(&signal_checker_timer, SIGNAL(timeout()), this, SLOT(look_for_signals_change()));
   signal_checker_timer.start(100 /* ms */);
 
+  sound_listener.setErrorCallback(&MainWindow::on_midi_error, nullptr);
+  sound_player.setErrorCallback(&MainWindow::on_midi_error, this);
+
   {
     // automatically open an output midi port if possible
     const auto nb_ports = sound_player.getPortCount();
@@ -686,5 +769,6 @@ MainWindow::~MainWindow()
 {
   clear_music_scheet();
   delete ui;
+  sound_listener.closePort();
   sound_player.closePort();
 }

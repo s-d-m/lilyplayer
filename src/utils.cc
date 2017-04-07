@@ -289,3 +289,36 @@ uint16_t find_music_sheet_pos(const std::vector<music_sheet_event>& events, unsi
 
   return it->new_svg_file;
 }
+
+
+
+#if defined(__clang__)
+  // clang will complain in a switch that the default case is useless
+  // because all possible values in the enum are already taken into
+  // account.  however, since the value can come from an unrestricted
+  // uint8_t, the default is actually a necessary safe-guard.
+  #pragma clang diagnostic push
+  #pragma clang diagnostic ignored "-Wcovered-switch-default"
+#endif
+
+const char* rt_error_type_as_str(RtMidiError::Type value)
+{
+  switch (value) {
+    case RtMidiError::Type::WARNING:             return "A non-critical error.";
+    case RtMidiError::Type::DEBUG_WARNING:       return "A non-critical error which might be useful for debugging.";
+    case RtMidiError::Type::UNSPECIFIED:         return "The default, unspecified error type.";
+    case RtMidiError::Type::NO_DEVICES_FOUND:    return "No devices found on system.";
+    case RtMidiError::Type::INVALID_DEVICE:      return "An invalid device ID was specified.";
+    case RtMidiError::Type::MEMORY_ERROR:        return "An error occured during memory allocation.";
+    case RtMidiError::Type::INVALID_PARAMETER:   return "An invalid parameter was specified to a function.";
+    case RtMidiError::Type::INVALID_USE:         return "The function was called incorrectly.";
+    case RtMidiError::Type::DRIVER_ERROR:        return "A system driver error occured.";
+    case RtMidiError::Type::SYSTEM_ERROR:        return "A system error occured.";
+    case RtMidiError::Type::THREAD_ERROR:        return "A thread error occured.";
+    default:                                     return "Something completely unknown to RtMidi.";
+  }
+}
+
+#if defined(__clang__)
+  #pragma clang diagnostic pop
+#endif

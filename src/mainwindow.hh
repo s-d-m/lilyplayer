@@ -44,11 +44,13 @@ class MainWindow : public QMainWindow
   private:
     void pause_music();
     void stop_song();
+    void close_input_port();
     void clear_music_scheet();
     void process_music_sheet_event(const music_sheet_event& keys_event);
     void display_music_sheet(const unsigned music_sheet_pos);
     void keyPressEvent(QKeyEvent * event) override;
     static void on_midi_input(double timestamp __attribute__((unused)), std::vector<unsigned char> *message, void* param);
+    static void on_midi_error(RtMidiError::Type type, const std::string &errorText, void *param);
     void process_keyboard_event(const std::vector<key_down>& keys_down,
 				const std::vector<key_up>& keys_up,
 				const std::vector<midi_message_t>& messages);
