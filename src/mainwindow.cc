@@ -505,14 +505,22 @@ void MainWindow::on_midi_input(double timestamp __attribute__((unused)), std::ve
   message->clear();
 }
 
-void MainWindow::on_midi_error(RtMidiError::Type type, const std::string &errorText, void *param)
+void MainWindow::on_midi_error(RtMidiError::Type type, const std::string &errorText, const char* const direction)
 {
-  const bool is_midi_input = (param == nullptr);
-
-  std::cerr << "Error occured for midi " << (is_midi_input ? "input" : "output") << ":\n"
+  std::cerr << "Error occured for midi " << direction << ":\n"
 	    << "  RtMidi considers this as a " << rt_error_type_as_str(type) << "\n"
 	    << "  it also says: " << errorText << "\n"
 	    << std::endl;
+}
+
+void MainWindow::on_midi_input_error(RtMidiError::Type type, const std::string &errorText, void* param __attribute__((unused)))
+{
+  on_midi_error(type, errorText, "input");
+}
+
+void MainWindow::on_midi_output_error(RtMidiError::Type type, const std::string &errorText, void* param __attribute__((unused)))
+{
+  on_midi_error(type, errorText, "output");
 }
 
 void MainWindow::set_input_port(unsigned int i)
@@ -706,8 +714,8 @@ MainWindow::MainWindow(QWidget *parent) :
   connect(&signal_checker_timer, SIGNAL(timeout()), this, SLOT(look_for_signals_change()));
   signal_checker_timer.start(100 /* ms */);
 
-  sound_listener.setErrorCallback(&MainWindow::on_midi_error, nullptr);
-  sound_player.setErrorCallback(&MainWindow::on_midi_error, this);
+  sound_listener.setErrorCallback(&MainWindow::on_midi_input_error, nullptr);
+  sound_player.setErrorCallback(&MainWindow::on_midi_output_error, nullptr);
 
   {
     // automatically open an output midi port if possible
