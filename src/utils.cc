@@ -351,3 +351,24 @@ std::vector<std::string> get_output_midi_ports_name(RtMidiOut& midi_player)
 {
   return get_midi_ports_name(midi_player);
 }
+
+
+bool begins_by(const std::string& haystack, const char* const needle)
+{
+  return haystack.find(needle) == 0;
+}
+
+std::vector<std::string> filter_out(const std::vector<std::string>& list, const char* const pattern_to_filter_out)
+{
+  std::vector<std::string> res;
+
+  for (const auto& str : list)
+  {
+    if (not begins_by(str, pattern_to_filter_out))
+    {
+      res.push_back(str);
+    }
+  }
+
+  return res;
+}
