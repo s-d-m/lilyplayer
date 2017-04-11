@@ -19,6 +19,8 @@ extern volatile sig_atomic_t continue_requested;
 extern volatile sig_atomic_t exit_requested;
 extern volatile sig_atomic_t new_signal_received;
 
+static constexpr const char * const LILYPLAYER_VIRTUAL_MIDI_INPUT = "Lilyplayer listener";
+static constexpr const char * const LILYPLAYER_VIRTUAL_MIDI_OUTPUT = "Lilyplayer sound player";
 
 void MainWindow::look_for_signals_change()
 {
@@ -401,6 +403,7 @@ void MainWindow::set_output_port(const unsigned int i)
     sound_player.closePort();
     sound_player.openPort(i);
     const auto port_name = sound_player.getPortName(i);
+    sound_player.openVirtualPort();
     this->selected_output_port = port_name;
     this->update_output_ports();
   }
@@ -440,6 +443,7 @@ void MainWindow::output_port_change()
 	{
 	  sound_player.closePort();
 	  sound_player.openPort(i);
+	  sound_player.openVirtualPort();
 	}
       }
     }
@@ -467,9 +471,16 @@ void MainWindow::update_output_ports()
     action_group = new QActionGroup( menu_output_port );
   }
 
-  for (unsigned int i = 0; i < nb_ports; ++i)
+  auto port_names = get_output_midi_ports_name(sound_player);
+  port_names = filter_out(port_names, LILYPLAYER_VIRTUAL_MIDI_INPUT);
+  if (selected_input_port != "")
   {
-    const auto port_name = sound_player.getPortName(i);
+    port_names = filter_out(port_names, selected_input_port.c_str());
+  }
+
+
+  for (const auto& port_name : port_names)
+  {
     const auto label = QString::fromStdString( port_name );
     auto button = menu_output_port->addAction(label);
     button->setCheckable(true);
@@ -530,6 +541,7 @@ void MainWindow::set_input_port(unsigned int i)
   sound_listener.closePort();
   sound_listener.setCallback(&MainWindow::on_midi_input, this);
   sound_listener.openPort(i);
+  sound_listener.openVirtualPort();
 }
 
 void MainWindow::close_input_port()
@@ -667,10 +679,15 @@ void MainWindow::update_input_entries()
 
   {
     // Add one entry per input midi port
-    const auto nb_ports = sound_listener.getPortCount();
-    for (unsigned int i = 0; i < nb_ports; ++i)
+    auto port_names = get_input_midi_ports_name(sound_listener);
+    port_names = filter_out(port_names, LILYPLAYER_VIRTUAL_MIDI_OUTPUT);
+    if (selected_output_port != "")
     {
-      const auto port_name = sound_listener.getPortName(i);
+      port_names = filter_out(port_names, selected_output_port.c_str());
+    }
+
+    for (const auto& port_name : port_names)
+    {
       const auto label = QString::fromStdString( port_name );
       auto button = menu_input->addAction(label);
       button->setCheckable(true);
@@ -701,8 +718,8 @@ MainWindow::MainWindow(QWidget *parent) :
   svg_rect(nullptr),
   signal_checker_timer(),
   song(),
-  sound_player(RtMidi::LINUX_ALSA),
-  sound_listener(RtMidi::LINUX_ALSA),
+  sound_player(RtMidi::LINUX_ALSA, LILYPLAYER_VIRTUAL_MIDI_OUTPUT),
+  sound_listener(RtMidi::LINUX_ALSA, LILYPLAYER_VIRTUAL_MIDI_INPUT),
   is_in_pause(true)
 {
   ui->setupUi(this);
@@ -717,6 +734,11 @@ MainWindow::MainWindow(QWidget *parent) :
   sound_listener.setErrorCallback(&MainWindow::on_midi_input_error, nullptr);
   sound_player.setErrorCallback(&MainWindow::on_midi_output_error, nullptr);
 
+  sound_listener.setCallback(&MainWindow::on_midi_input, this);
+
+  sound_player.openVirtualPort();
+  sound_listener.openVirtualPort();
+
   {
     // automatically open an output midi port if possible
     const auto nb_ports = sound_player.getPortCount();
@@ -727,9 +749,18 @@ MainWindow::MainWindow(QWidget *parent) :
     else
     {
       // automatically open an output midi port.
-      const unsigned int port_to_use = (nb_ports == 1) ? 0 : 1;
-      sound_player.openPort( port_to_use );
-      this->selected_output_port = sound_player.getPortName( port_to_use );
+      // port number 0 is usually "Midi Through 14:0" which seems to be a dummy.
+      // avoid choosing the listening port as otherwise it creates the "inifinite movement" issue
+      unsigned int port_to_use = (nb_ports == 1) ? 0 : 1;
+      while ((port_to_use < nb_ports) and begins_by(sound_player.getPortName(port_to_use), LILYPLAYER_VIRTUAL_MIDI_INPUT))
+      {
+	++port_to_use;
+      }
+      if (port_to_use < nb_ports)
+      {
+	sound_player.openPort( port_to_use );
+	this->selected_output_port = sound_player.getPortName( port_to_use );
+      }
     }
   }
 
