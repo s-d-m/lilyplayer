@@ -97,7 +97,7 @@ class MainWindow : public QMainWindow
     RtMidiOut sound_player;
     RtMidiIn  sound_listener;
     std::string selected_output_port = "";
-    std::string selected_input = "";
+    std::string selected_input_port = "";
 
 
     unsigned int start_pos = INVALID_SONG_POS;

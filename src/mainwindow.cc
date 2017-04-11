@@ -286,7 +286,7 @@ void MainWindow::open_file(const std::string& filename)
 
     this->song_pos = this->start_pos;
     sound_listener.closePort();
-    this->selected_input.clear();
+    this->selected_input_port.clear();
 
     const auto nb_svg = song.svg_files.size();
     if (rendered_sheets.size() != 0)
@@ -526,7 +526,7 @@ void MainWindow::on_midi_output_error(RtMidiError::Type type, const std::string 
 void MainWindow::set_input_port(unsigned int i)
 {
   const auto port_name = sound_listener.getPortName(i);
-  this->selected_input = port_name;
+  this->selected_input_port = port_name;
   sound_listener.closePort();
   sound_listener.setCallback(&MainWindow::on_midi_input, this);
   sound_listener.openPort(i);
@@ -570,7 +570,7 @@ void MainWindow::input_change()
 											 });
 
   this->clear_music_scheet();
-  this->selected_input = clicked_button->text().toStdString();
+  this->selected_input_port = clicked_button->text().toStdString();
 
   const auto nb_ports_with_selected_input_name = [&] () {
 						   const auto nb_ports = sound_listener.getPortCount();
@@ -578,7 +578,7 @@ void MainWindow::input_change()
 						   for (unsigned int i = 0; i < nb_ports; ++i)
 						   {
 						     const auto port_name = sound_listener.getPortName(i);
-						     if (port_name == selected_input)
+						     if (port_name == selected_input_port)
 						     {
 						       ++res;
 						     }
@@ -609,12 +609,12 @@ void MainWindow::input_change()
 						   for (unsigned int i = 0; i < nb_ports; ++i)
 						   {
 						     const auto port_name = sound_listener.getPortName(i);
-						     if (port_name == selected_input)
+						     if (port_name == selected_input_port)
 						     {
 						       return i;
 						     }
 						   }
-						   throw std::runtime_error(std::string{"no midi input port with name ["} + selected_input + "] found");
+						   throw std::runtime_error(std::string{"no midi input port with name ["} + selected_input_port + "] found");
 						 }();
 
 
@@ -633,7 +633,7 @@ void MainWindow::input_change()
     // failed to change port, clear the selected item. There is no need to set the button
     // to unchecked as the menu is automatically closed after selecting an item, and the
     // entries are regenerated when the menu is opened again.
-    this->selected_input.clear();
+    this->selected_input_port.clear();
 
     // make sure to close all inputs ports
     sound_listener.cancelCallback();
@@ -674,7 +674,7 @@ void MainWindow::update_input_entries()
       const auto label = QString::fromStdString( port_name );
       auto button = menu_input->addAction(label);
       button->setCheckable(true);
-      const auto select_this_port = ( port_name == selected_input );
+      const auto select_this_port = ( port_name == selected_input_port );
       button->setChecked( select_this_port );
 
       button->setActionGroup( action_group );
