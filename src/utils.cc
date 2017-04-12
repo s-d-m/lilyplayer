@@ -322,3 +322,53 @@ const char* rt_error_type_as_str(RtMidiError::Type value)
 #if defined(__clang__)
   #pragma clang diagnostic pop
 #endif
+
+
+template <typename T>
+static std::vector<std::string> get_midi_ports_name(T& midi)
+{
+  std::vector<std::string> res;
+
+  const auto nb_ports = midi.getPortCount();
+
+  for (auto i = decltype(nb_ports){0}; i < nb_ports; ++i)
+  {
+    const auto port_name = midi.getPortName(i);
+    res.emplace_back(std::move(port_name));
+  }
+
+  return res;
+}
+
+
+std::vector<std::string> get_input_midi_ports_name(RtMidiIn& midi_listener)
+{
+  return get_midi_ports_name(midi_listener);
+}
+
+
+std::vector<std::string> get_output_midi_ports_name(RtMidiOut& midi_player)
+{
+  return get_midi_ports_name(midi_player);
+}
+
+
+bool begins_by(const std::string& haystack, const char* const needle)
+{
+  return haystack.find(needle) == 0;
+}
+
+std::vector<std::string> filter_out(const std::vector<std::string>& list, const char* const pattern_to_filter_out)
+{
+  std::vector<std::string> res;
+
+  for (const auto& str : list)
+  {
+    if (not begins_by(str, pattern_to_filter_out))
+    {
+      res.push_back(str);
+    }
+  }
+
+  return res;
+}

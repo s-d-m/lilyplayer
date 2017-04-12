@@ -102,5 +102,10 @@ uint16_t find_music_sheet_pos(const std::vector<music_sheet_event>& events, unsi
 
 const char* rt_error_type_as_str(RtMidiError::Type value);
 
+std::vector<std::string> get_input_midi_ports_name(RtMidiIn& midi_listener);
+std::vector<std::string> get_output_midi_ports_name(RtMidiOut& midi_player);
+
+bool begins_by(const std::string& haystack, const char* const needle);
+std::vector<std::string> filter_out(const std::vector<std::string>& list, const char* const pattern_to_filter_out);
 
 #endif /* UTILS_HH_ */
