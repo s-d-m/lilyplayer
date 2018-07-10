@@ -84,9 +84,9 @@ GENHTML_FLAGS = --branch-coverage
 
 TOOLCHAIN=gcc
 
-CLANG_CC  = clang-4.0
-CLANG_CXX = clang++-4.0
-SCAN_BUILD = scan-build-4.0
+CLANG_CC  ?= clang
+CLANG_CXX ?= clang++
+SCAN_BUILD ?= scan-build
 
 ifeq ($(TOOLCHAIN),clang)
   CXX := ${CLANG_CXX}
@@ -127,58 +127,98 @@ ifeq ($(TOOLCHAIN),clang)
 	-z nodump
 
 else
-# for gcc 6
-  CC := gcc-6
-  CC_WARN_FLAGS ?= \
+
+  CC_WARN_FLAGS_FOR_GCC_4.9 := \
+	-Werror \
+	-Wpedantic \
 	-Wall \
-	-pedantic -pedantic-errors \
 	-Wextra \
 	-Wdouble-promotion \
 	-Wformat=2 \
-	-Wnull-dereference \
 	-Winit-self \
+	-Wuninitialized \
 	-Wmissing-include-dirs \
-	-Wshift-overflow=2 \
 	-Wswitch-default \
 	-Wswitch-enum \
+	-Wunused \
 	-Wunused-parameter \
-	-Wuninitialized \
-	-Wstrict-aliasing \
+	-Wunknown-pragmas \
+	-Wstrict-aliasing=3 \
 	-Wstrict-overflow=5 \
 	-Wsuggest-attribute=pure \
 	-Wsuggest-attribute=const \
 	-Wsuggest-attribute=noreturn \
 	-Wsuggest-attribute=format \
-	-Wduplicated-cond \
+	-Wmissing-format-attribute \
 	-Wtrampolines \
 	-Wfloat-equal \
 	-Wtraditional-conversion \
 	-Wundef \
 	-Wshadow \
-	-funsafe-loop-optimizations \
 	-Wunsafe-loop-optimizations \
 	-Wpointer-arith \
+	-Wtype-limits \
 	-Wbad-function-cast \
+	-Wc++-compat \
 	-Wcast-qual \
 	-Wcast-align \
 	-Wwrite-strings \
 	-Wconversion \
+	-Wdate-time \
 	-Wjump-misses-init \
+	-Wconversion \
 	-Wlogical-op \
 	-Waggregate-return \
 	-Wstrict-prototypes \
 	-Wold-style-definition \
-	-Wmissing-prototypes \
 	-Wmissing-declarations \
+	-Wpacked \
+	-Wpadded \
 	-Wredundant-decls \
+	-Wnested-externs \
+	-Winline \
 	-Winvalid-pch \
+	-Wvariadic-macros \
+	-Wvarargs \
 	-Wvla \
+	-Wdisabled-optimization \
 	-Wunsuffixed-float-constants \
-#	-Wpadded \
+	-Wno-c++-compat
 
-  CXX=g++-6
+  CC_WARN_FLAGS_FOR_GCC_5 := \
+	${CC_WARN_FLAGS_FOR_GCC_4.9} \
+# All the new warning flags for gcc 5 are enabled by default or -Wall, hence nothing to add here
+
+#-fcheck-pointer-bounds
+# Pointer Bounds Checker, a bounds violation detector, has been added and can be enabled via
+# -fcheck-pointer-bounds. Memory accesses are instrumented with run-time checks of used pointers
+# against their bounds to detect pointer bounds violations (overflows). The Pointer Bounds Checker
+# is available on x86/x86-64 GNU/Linux targets with a new ISA extension Intel MPX support. See the
+# Pointer Bounds Checker Wiki page for more details.
+
+  CC_WARN_FLAGS_FOR_GCC_6 := \
+	${CC_WARN_FLAGS_FOR_GCC_5} \
+	-Wshift-overflow=2 \
+	-fdelete-null-pointer-checks \
+	-Wnull-dereference \
+	-Wduplicated-cond
+
+  CC_WARN_FLAGS_FOR_GCC_7 := \
+	${CC_WARN_FLAGS_FOR_GCC_6} \
+	-Wduplicated-branches \
+	-Wrestrict \
+	-Walloc-zero \
+	-Wformat-overflow=2 \
+	-Wformat-signedness \
+	-Wformat-truncation=2
+
+  CC_WARN_FLAGS_FOR_GCC_8 := \
+	${CC_WARN_FLAGS_FOR_GCC_7} \
+	-Wmultistatement-macros \
+	-Wcast-align=strict
+
 # for g++ 4.9
-  CXX_WARN_FLAGS ?= \
+  CXX_WARN_FLAGS_FOR_GCC_4.9 ?= \
 	-Werror \
 	-Wno-pedantic \
 	-Wpointer-arith \
@@ -221,7 +261,7 @@ else
 	-Wuseless-cast \
 	-Wlogical-op \
 	-Wvector-operation-performance \
-	-Wabi \
+	-Wabi=11 \
 	-Wctor-dtor-privacy \
 	-Wnoexcept \
 	-Weffc++ \
@@ -234,7 +274,8 @@ else
 #	-Wpadded \
 
 # for G++ 5.1/5.2
-  CXX_WARN_FLAGS += \
+  CXX_WARN_FLAGS_FOR_GCC_5 := \
+	${CXX_WARN_FLAGS_FOR_GCC_4.9} \
 	-Wswitch-bool \
 	-Wlogical-not-parentheses \
 	-Wsizeof-array-argument \
@@ -244,14 +285,83 @@ else
 	-Wsuggest-final-methods \
 	-Wsuggest-override
 
-# For g++ 6
-  CXX_WARN_FLAGS += \
+  CXX_WARN_FLAGS_FOR_GCC_6 := \
+	${CXX_WARN_FLAGS_FOR_GCC_5} \
 	-Wnull-dereference -fdelete-null-pointer-checks \
 	-Wduplicated-cond \
 	-Wplacement-new=2 \
 	-Wconditionally-supported \
 	-fsized-deallocation \
 	-Wsized-deallocation \
+
+  CXX_WARN_FLAGS_FOR_GCC_7 := \
+	${CXX_WARN_FLAGS_FOR_GCC_6} \
+	-Wduplicated-branches \
+	-Wrestrict \
+	-Wregister \
+	-Wdangling-else \
+	-Walloc-size-larger-than=1073741824 \
+	-Walloc-zero \
+	-Walloca \
+	-Wformat-overflow=2 \
+	-Wformat-truncation=2 \
+	-Wstringop-overflow=4 \
+	-Waligned-new
+#	-Walloc-size-larger-than=1073741824 \ # Allocating more than 1GiB is likely a bug
+
+  CXX_WARN_FLAGS_FOR_GCC_8 := \
+	${CXX_WARN_FLAGS_FOR_GCC_7} \
+	-Wmultistatement-macros \
+	-Wcast-align=strict \
+
+  HARDENING_FLAGS_FOR_GCC_4.9 := \
+	-fstack-protector-all \
+	--param ssp-buffer-size=4 \
+	-D_FORTIFY_SOURCE=2 \
+	-fPIC
+
+  HARDENING_FLAGS_FOR_GCC_5 := ${HARDENING_FLAGS_FOR_GCC_4.9}
+
+  HARDENING_FLAGS_FOR_GCC_6 := ${HARDENING_FLAGS_FOR_GCC_5}
+
+  HARDENING_FLAGS_FOR_GCC_7 := ${HARDENING_FLAGS_FOR_GCC_6}
+
+  HARDENING_FLAGS_FOR_GCC_8 := \
+	${HARDENING_FLAGS_FOR_GCC_7} \
+	-fcf-protection=full \
+	-fstack-clash-protection
+
+  GCC_VERSION := $(shell "${CXX}" -v 2>&1 | gawk '($$1 == "gcc") && ($$2 == "version") { sub(/\..*/, "", $$3) ; print $$3 ; exit }' )
+
+  ifeq ($(shell [ "${GCC_VERSION}" -ge 8 ] && echo $$?),0)
+	CXX_WARN_FLAGS := ${CXX_WARN_FLAGS_FOR_GCC_8}
+	CC_WARN_FLAGS := ${CC_WARN_FLAGS_FOR_GCC_8}
+	HARDENING_FLAGS := ${HARDENING_FLAGS_FOR_GCC_8}
+  endif
+
+  ifeq (${GCC_VERSION},7)
+	CXX_WARN_FLAGS := ${CXX_WARN_FLAGS_FOR_GCC_7}
+	CC_WARN_FLAGS := ${CC_WARN_FLAGS_FOR_GCC_7}
+	HARDENING_FLAGS := ${HARDENING_FLAGS_FOR_GCC_7}
+  endif
+
+  ifeq (${GCC_VERSION},6)
+	CXX_WARN_FLAGS := ${CXX_WARN_FLAGS_FOR_GCC_6}
+	CC_WARN_FLAGS := ${CC_WARN_FLAGS_FOR_GCC_6}
+	HARDENING_FLAGS := ${HARDENING_FLAGS_FOR_GCC_6}
+  endif
+
+  ifeq (${GCC_VERSION},5)
+	CXX_WARN_FLAGS := ${CXX_WARN_FLAGS_FOR_GCC_5}
+	CC_WARN_FLAGS := ${CC_WARN_FLAGS_FOR_GCC_5}
+	HARDENING_FLAGS := ${HARDENING_FLAGS_FOR_GCC_5}
+  endif
+
+  ifeq (${CXX_WARN_FLAGS},)
+	CXX_WARN_FLAGS := ${CXX_WARN_FLAGS_FOR_GCC_4.9}
+	CC_WARN_FLAGS := ${CC_WARN_FLAGS_FOR_GCC_4.9}
+	HARDENING_FLAGS := ${HARDENING_FLAGS_FOR_GCC_4.9}
+  endif
 
 
 # sanitizers on g++5.2
@@ -262,12 +372,6 @@ else
 # -fcheck-pointer-bounds -mmpx # pointer checker is not supported with address sanitiser
 # -fsanitize=thread #is incompatible with sanitize address
 # -fsanitize=leak # leak sanitizer can't be used if either address or thread sanitizer is used
-
-  HARDENING_FLAGS = \
-	-fstack-protector-all \
-	--param ssp-buffer-size=4 \
-	-D_FORTIFY_SOURCE=2 \
-	-fPIC
 
   LDFLAGS = \
 	-pie \
@@ -308,7 +412,7 @@ all: ${TARGET}
 
 ${TARGET}: ${OBJS}
 	-mkdir -p ${TARGET_DIR}
-	${CXX} ${CXXFLAGS} -o ${TARGET} ${OBJS} ${LIBS}
+	${CXX} ${CXXFLAGS} -o ${TARGET} ${OBJS} ${LIBS} -lstdc++
 
 ${RESOURCE_CODE}: ${QT_STYLE_FILES}
 	cd ../qdarkstyle && ${RCC} -o ../src/"$@" ${RC_FILE}
@@ -317,7 +421,7 @@ ${RESOURCE_CODE}: ${QT_STYLE_FILES}
 define specific_flags
  $(if $(findstring clang,$(CXX)),\
    $(if $(findstring "resources.o",$(1)),-Wno-exit-time-destructors -Wno-global-constructors,)\
-   $(if $(findstring "moc_mainwindow.o",$(1)),-Wno-undefined-reinterpret-cast,)\
+   $(if $(findstring "moc_mainwindow.o",$(1)),-w,)\
   , $(if $(findstring "moc_mainwindow.o",$(1)),-Wno-useless-cast,))
 endef
 

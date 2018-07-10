@@ -36,7 +36,7 @@ class MainWindow : public QMainWindow
 
   public:
     explicit MainWindow(QWidget *parent = nullptr);
-    ~MainWindow();
+    ~MainWindow() override;
     void open_file(const std::string& filename);
     void set_output_port(const unsigned int i);
     void set_input_port(const unsigned int i);

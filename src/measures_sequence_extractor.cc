@@ -68,13 +68,15 @@ get_end_measures_sequence_pos(const bin_song_t& song,
   const auto nb_events = events.size();
   const auto events_begin = events.begin();
   const auto events_end = events.end();
+  const auto dist_events_begin_end = static_cast<decltype(stop_positions[0])>(std::distance(events_begin, events_end));
 
   auto res = decltype(stop_positions){};
   res.reserve(stop_positions.size());
 
   for (const auto stop_pos : stop_positions)
   {
-    if (stop_pos >= static_cast<decltype(stop_pos)>(std::distance(events_begin, events_end)))
+
+    if (stop_pos >= dist_events_begin_end)
     {
       throw std::runtime_error("stop event position is not in the event vector");
     }
@@ -101,7 +103,9 @@ get_end_measures_sequence_pos(const bin_song_t& song,
     }
     else
     {
-      res.push_back(static_cast<decltype(stop_pos)>(std::distance(events_begin, it)));
+      const auto end_measure = static_cast<decltype(stop_positions[0])>(std::distance(events_begin, it));
+
+      res.push_back(end_measure);
     }
   }
 
