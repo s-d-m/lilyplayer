@@ -1,12 +1,10 @@
 Lilyplayer
 ========
 
-Lilyplayer is not ready yet!
+Lilyplayer plays piano music sheets, as can be seen below
 
-License
-------
+[![Demo](./misc/lilyplayer-fake-video-screenshot.png)](./misc/lilyplayer-demo.webm "demo")
 
-Todo: choose a license
 
 Build dependencies
 ----------------
