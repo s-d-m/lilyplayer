@@ -57,6 +57,12 @@ or you can play a midi file by choosing `select file` in the input menu, or usin
 
 When playing a midi file, one can play/pause it using the `space` key, or the `Ctrl + P` shortcut.
 
+Misc
+-----
+
+To generate your own music sheets, see [lilydumper](https://github.com/s-d-m/lilydumper) or simply grab
+pre-made one [here](https://github.com/s-d-m/precompiled_music_sheets_for_lilyplayer)
+
 
 Other files you may want to read
 --------------------------------
