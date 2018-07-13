@@ -317,8 +317,11 @@ else
   HARDENING_FLAGS_FOR_GCC_4.9 := \
 	-fstack-protector-all \
 	--param ssp-buffer-size=4 \
-	-D_FORTIFY_SOURCE=2 \
 	-fPIC
+
+ifeq ($(BUILD),release)
+  HARDENING_FLAGS_FOR_GCC_4.9 += -D_FORTIFY_SOURCE=2
+endif
 
   HARDENING_FLAGS_FOR_GCC_5 := ${HARDENING_FLAGS_FOR_GCC_4.9}
 
