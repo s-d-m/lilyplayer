@@ -301,6 +301,7 @@ uint16_t find_music_sheet_pos(const std::vector<music_sheet_event>& events, unsi
   #pragma clang diagnostic ignored "-Wcovered-switch-default"
 #endif
 
+__attribute__((const))
 const char* rt_error_type_as_str(RtMidiError::Type value)
 {
   switch (value) {
