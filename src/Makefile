@@ -416,7 +416,7 @@ all: ${TARGET}
 
 ${TARGET}: ${OBJS} librtmidi
 	-mkdir -p ${TARGET_DIR}
-	${CXX} ${CXXFLAGS} -o ${TARGET} ${OBJS} ${LIBS} -lstdc++
+	${CXX} ${CXXFLAGS} ${LDFLAGS} -o ${TARGET} ${OBJS} ${LIBS} -lstdc++
 
 ${RESOURCE_CODE}: ${QT_STYLE_FILES}
 	cd ../qdarkstyle && ${RCC} -o ../src/"$@" ${RC_FILE}
