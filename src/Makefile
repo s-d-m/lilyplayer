@@ -383,7 +383,8 @@ endif
 	-z now\
 	-z relro \
 	-z nodlopen \
-	-z nodump
+	-z nodump \
+	-fuse-ld=gold
 endif
 
 
