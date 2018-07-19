@@ -36,6 +36,21 @@ Once all the dependencies have been installed, you can simply compile `lilyplaye
 
 This will generate the `lilyplayer` binary in `./bin`
 
+If you want to generate an appimage, you will also need the `wget` and  `realpath` binary. On debian it is provided as part of the
+`coreutils` package. On Ubuntu it is on its own package. Therefore, use
+
+	sudo apt-get install coreutils wget
+
+on debian. And on ubuntu, type
+
+	sudo apt-get install realpath wget
+
+Then you can generate the appimage using:
+
+	make appimage
+
+A file lilyplayer-x86_64.AppImage should be generated in the bin folder
+
 How to use
 ----------
 
