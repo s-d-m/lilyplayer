@@ -2,7 +2,8 @@
 
 function has_qmake()
 {
-    which -a qmake &>/dev/null
+    qmake --version &>/dev/null
+    [ $? -eq 0 ]
 }
 
 function get_rcc_binary()
