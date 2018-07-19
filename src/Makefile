@@ -413,7 +413,8 @@ ifeq ($(32_BITS),1)
 endif
 
 
-all: ${TARGET}
+all:  lilyplayer
+lilyplayer: ${TARGET}
 
 ${TARGET}: ${OBJS} librtmidi
 	-mkdir -p ${TARGET_DIR}
@@ -478,7 +479,7 @@ clean:
 	       "${COVERAGE_HTML_DIR}"  "${TARGET}.info" gmon.out  "${PROFILING_OUTPUT}"
 
 
-.PHONY: all clean scan-build coverage check profiling librtmidi
+.PHONY: all clean scan-build coverage check profiling librtmidi lilyplayer
 
 .SUFFIXES:
 
