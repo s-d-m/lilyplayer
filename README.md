@@ -24,8 +24,8 @@ consider installing `timidity`
 
 On `debian`, one can install them the following way:
 
-	sudo apt-get install timidity librtmidi-dev libqt5widgets5 libqt5gui5 libqt5core5a qt5-default qt5-qmake g++-5 libqt5svg5 libqt5svg5-dev
-
+	sudo apt-get install timidity libqt5widgets5 libqt5gui5 libqt5core5a qt5-default qt5-qmake g++-5 libqt5svg5 libqt5svg5-dev \
+	  gawk sed autoconf libtool libasound2-dev
 
 Compiling instructions
 -------------------
