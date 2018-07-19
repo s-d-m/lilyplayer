@@ -430,10 +430,8 @@ librtmidi: ../3rd-party/rtmidi/.libs/librtmidi.so
 	make
 
 define specific_flags
- $(if $(findstring clang,$(CXX)),\
-   $(if $(findstring "resources.o",$(1)),-Wno-exit-time-destructors -Wno-global-constructors,)\
-   $(if $(findstring "moc_mainwindow.o",$(1)),-w,)\
-  , $(if $(findstring "moc_mainwindow.o",$(1)),-Wno-useless-cast,))
+   $(if $(findstring "resources.o",$(1)),-Wno-error,)\
+   $(if $(findstring "moc_mainwindow.o",$(1)),-Wno-error,)
 endef
 
 %.o: %.cc ${FORMS_HEADERS}
