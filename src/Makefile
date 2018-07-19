@@ -4,7 +4,8 @@ include Makefile.vars
 TARGET_DIR := ../bin
 TARGET := ${TARGET_DIR}/lilyplayer
 
-LIBS += -lrtmidi
+LIBS += -L../3rd-party/rtmidi/.libs -lrtmidi
+INCLUDES += -I../3rd-party/ -isystem ../3rd-party/
 
 LIBS += ${QT_LIBS}
 DEFINES += ${QT_DEFINES}
@@ -413,13 +414,20 @@ endif
 
 all: ${TARGET}
 
-${TARGET}: ${OBJS}
+${TARGET}: ${OBJS} librtmidi
 	-mkdir -p ${TARGET_DIR}
 	${CXX} ${CXXFLAGS} -o ${TARGET} ${OBJS} ${LIBS} -lstdc++
 
 ${RESOURCE_CODE}: ${QT_STYLE_FILES}
 	cd ../qdarkstyle && ${RCC} -o ../src/"$@" ${RC_FILE}
 
+librtmidi: ../3rd-party/rtmidi/.libs/librtmidi.so
+
+../3rd-party/rtmidi/.libs/librtmidi.so:
+	cd ../3rd-party/rtmidi && \
+	./autogen.sh && \
+	./configure && \
+	make
 
 define specific_flags
  $(if $(findstring clang,$(CXX)),\
@@ -471,7 +479,7 @@ clean:
 	       "${COVERAGE_HTML_DIR}"  "${TARGET}.info" gmon.out  "${PROFILING_OUTPUT}"
 
 
-.PHONY: all clean scan-build coverage check profiling
+.PHONY: all clean scan-build coverage check profiling librtmidi
 
 .SUFFIXES:
 
