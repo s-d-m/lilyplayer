@@ -62,7 +62,7 @@ static void signal_handler(int signum)
 {
   switch (signum)
   {
-    case SIGINT:  // Interrupt from keyboard
+    case SIGTSTP:
       new_signal_received = 1;
       pause_requested = 1;
       break;
@@ -74,7 +74,7 @@ static void signal_handler(int signum)
 
     case SIGQUIT: // stop program
     case SIGTERM:
-    case SIGTSTP:
+    case SIGINT:  // Interrupt from keyboard
       new_signal_received = 1;
       exit_requested = 1;
       break;
