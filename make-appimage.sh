@@ -30,7 +30,7 @@ function get_linuxdeployqt() {
 	printf >&2 '[INFO] pro tipp: to avoid downloading again and again, just download it once from %s, make it executable, and save it a folder that appears in %s\n' "${url_linuxqtdeploy}" "${PATH}"
 	printf >&2 '\n\n\n\n\n\n'
 
-	wget -q --show-progress --progress=bar:force -O "${tmp_dir}/${app_name}" "${url_linuxqtdeploy}"
+	wget --progress=bar:force -O "${tmp_dir}/${app_name}" "${url_linuxqtdeploy}"
 	if [ ! -e  "${tmp_dir}/${app_name}" ] ; then
 	    echo >&2 'Failed to download "${app_name}" from "${url_linuxqtdeploy}"'
 	    exit 2
