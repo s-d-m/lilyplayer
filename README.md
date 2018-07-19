@@ -27,11 +27,16 @@ On `debian`, one can install them the following way:
 	sudo apt-get install timidity libqt5widgets5 libqt5gui5 libqt5core5a qt5-default qt5-qmake g++-5 libqt5svg5 libqt5svg5-dev \
 	  gawk sed autoconf libtool libasound2-dev
 
+There is no need to install librtmidi packages as it is already included in this repository as a submode. Cloning this repository
+requires therefore to also initialise its submodule.
+
 Compiling instructions
 -------------------
 
 Once all the dependencies have been installed, you can simply compile `lilyplayer` by entering:
 
+	git clone --recursive 'https://github.com/s-d-m/lilyplayer'
+	cd lilyplayer
 	make
 
 This will generate the `lilyplayer` binary in `./bin`
