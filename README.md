@@ -24,8 +24,8 @@ consider installing `timidity`
 
 On `debian`, one can install them the following way:
 
-	sudo apt-get install timidity librtmidi-dev libqt5widgets5 libqt5gui5 libqt5core5a qt5-default qt5-qmake g++-5 libqt5svg5 libqt5svg5-dev
-
+	sudo apt-get install timidity libqt5widgets5 libqt5gui5 libqt5core5a qt5-default qt5-qmake g++-5 libqt5svg5 libqt5svg5-dev \
+	  gawk sed autoconf libtool libasound2-dev
 
 Compiling instructions
 -------------------
@@ -35,6 +35,21 @@ Once all the dependencies have been installed, you can simply compile `lilyplaye
 	make
 
 This will generate the `lilyplayer` binary in `./bin`
+
+If you want to generate an appimage, you will also need the `wget` and  `realpath` binary. On debian it is provided as part of the
+`coreutils` package. On Ubuntu it is on its own package. Therefore, use
+
+	sudo apt-get install coreutils wget
+
+on debian. And on ubuntu, type
+
+	sudo apt-get install realpath wget
+
+Then you can generate the appimage using:
+
+	make appimage
+
+A file lilyplayer-x86_64.AppImage should be generated in the bin folder
 
 How to use
 ----------

@@ -4,7 +4,8 @@ include Makefile.vars
 TARGET_DIR := ../bin
 TARGET := ${TARGET_DIR}/lilyplayer
 
-LIBS += -lrtmidi
+LIBS += -L../3rd-party/rtmidi/.libs -lrtmidi
+INCLUDES += -I../3rd-party/ -isystem ../3rd-party/
 
 LIBS += ${QT_LIBS}
 DEFINES += ${QT_DEFINES}
@@ -382,7 +383,8 @@ endif
 	-z now\
 	-z relro \
 	-z nodlopen \
-	-z nodump
+	-z nodump \
+	-fuse-ld=gold
 endif
 
 
@@ -411,21 +413,27 @@ ifeq ($(32_BITS),1)
 endif
 
 
-all: ${TARGET}
+all:  lilyplayer
+lilyplayer: ${TARGET}
 
-${TARGET}: ${OBJS}
+${TARGET}: ${OBJS} librtmidi
 	-mkdir -p ${TARGET_DIR}
-	${CXX} ${CXXFLAGS} -o ${TARGET} ${OBJS} ${LIBS} -lstdc++
+	${CXX} ${CXXFLAGS} ${LDFLAGS} -o ${TARGET} ${OBJS} ${LIBS} -lstdc++
 
 ${RESOURCE_CODE}: ${QT_STYLE_FILES}
 	cd ../qdarkstyle && ${RCC} -o ../src/"$@" ${RC_FILE}
 
+librtmidi: ../3rd-party/rtmidi/.libs/librtmidi.so
+
+../3rd-party/rtmidi/.libs/librtmidi.so:
+	cd ../3rd-party/rtmidi && \
+	./autogen.sh && \
+	./configure && \
+	make
 
 define specific_flags
- $(if $(findstring clang,$(CXX)),\
-   $(if $(findstring "resources.o",$(1)),-Wno-exit-time-destructors -Wno-global-constructors,)\
-   $(if $(findstring "moc_mainwindow.o",$(1)),-w,)\
-  , $(if $(findstring "moc_mainwindow.o",$(1)),-Wno-useless-cast,))
+   $(if $(findstring "resources.o",$(1)),-Wno-error,)\
+   $(if $(findstring "moc_mainwindow.o",$(1)),-Wno-error,)
 endef
 
 %.o: %.cc ${FORMS_HEADERS}
@@ -471,7 +479,7 @@ clean:
 	       "${COVERAGE_HTML_DIR}"  "${TARGET}.info" gmon.out  "${PROFILING_OUTPUT}"
 
 
-.PHONY: all clean scan-build coverage check profiling
+.PHONY: all clean scan-build coverage check profiling librtmidi lilyplayer
 
 .SUFFIXES:
 

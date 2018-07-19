@@ -11,6 +11,7 @@
 #include <QTimer>
 
 #include <limits>
+#include <atomic>
 
 #include <rtmidi/RtMidi.h>
 
