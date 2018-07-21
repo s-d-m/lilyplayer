@@ -1,0 +1,7 @@
+[Desktop Entry]
+Type=Application
+Name=Lilyplayer
+Exec=lilyplayer %F
+Icon=lilyplayer
+Comment=Plays music sheets
+Terminal=false
