@@ -1,0 +1,43 @@
+language: cpp
+compiler: gcc
+sudo: require
+dist: trusty
+
+before_install:
+  - sudo add-apt-repository -y ppa:ubuntu-toolchain-r/test
+  - sudo add-apt-repository -y ppa:beineri/opt-qt593-trusty
+  - sudo apt-get update -qq
+
+install:
+  - sudo apt-get -y install qt59base qt59svg timidity librtmidi-dev g++-5 gawk sed autoconf libtool libasound2-dev
+  - sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-5 90
+  - source /opt/qt*/bin/qt*-env.sh
+
+script:
+  - git submodule update --init --recursive
+  - make -j$(nproc)
+  - make install DESTDIR=$(readlink -f appdir)
+  - wget -c -nv "https://github.com/probonopd/linuxdeployqt/releases/download/continuous/linuxdeployqt-continuous-x86_64.AppImage"
+  - chmod a+x linuxdeployqt-continuous-x86_64.AppImage
+  - unset QTDIR; unset QT_PLUGIN_PATH ; unset LD_LIBRARY_PATH
+  - export VERSION=$(git rev-parse --short HEAD) # linuxdeployqt uses this for naming the file
+  - ./linuxdeployqt-continuous-x86_64.AppImage appdir/usr/share/applications/lilyplayer.desktop -bundle-non-qt-libs
+  - # Workaround to increase compatibility with older systems; see https://github.com/darealshinji/AppImageKit-checkrt for details
+  - mkdir -p appdir/usr/optional/ ; wget -c https://github.com/darealshinji/AppImageKit-checkrt/releases/download/continuous/exec-x86_64.so -O ./appdir/usr/optional/exec.so
+  - mkdir -p appdir/usr/optional/libstdc++/ ; cp /usr/lib/x86_64-linux-gnu/libstdc++.so.6 ./appdir/usr/optional/libstdc++/
+  - ( cd appdir ; rm AppRun ; wget -c https://github.com/darealshinji/AppImageKit-checkrt/releases/download/continuous/AppRun-patched-x86_64 -O AppRun ; chmod a+x AppRun)
+  - # Manually invoke appimagetool so that libstdc++ gets bundled and the modified AppRun stays intact
+  - ./linuxdeployqt*.AppImage --appimage-extract
+  - export PATH=$(readlink -f ./squashfs-root/usr/bin):$PATH
+  - ./squashfs-root/usr/bin/appimagetool -g ./appdir/ Lilyplayer-$VERSION-x86_64.AppImage
+
+after_success:
+  - find appdir -executable -type f -exec ldd {} \; | grep " => /usr" | cut -d " " -f 2-3 | sort | uniq
+  - # curl --upload-file Lilyplayer*.AppImage https://transfer.sh/Lilyplayer-git.$(git rev-parse --short HEAD)-x86_64.AppImage
+  - wget -c https://github.com/probonopd/uploadtool/raw/master/upload.sh
+  - bash upload.sh Lilyplayer*.AppImage*
+
+branches:
+  except:
+    - # Do not build tags that we create when we upload to GitHub Releases
+    - /^(?i:continuous)/
