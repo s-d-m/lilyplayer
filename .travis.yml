@@ -9,7 +9,7 @@ before_install:
   - sudo apt-get update -qq
 
 install:
-  - sudo apt-get -y install qt59base qt59svg timidity librtmidi-dev g++-5 gawk sed autoconf libtool libasound2-dev
+  - sudo apt-get -y install qt59base qt59svg  g++-5 gawk sed autoconf libtool libasound2-dev
   - sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-5 90
   - source /opt/qt*/bin/qt*-env.sh
 
