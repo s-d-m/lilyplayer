@@ -8,7 +8,7 @@ clean:
 install:
 	./make-install.sh ${DESTDIR}
 
-appimage:
+appimage: lilyplayer
 	./make-appimage.sh
 
 .PHONY: all lilyplayer clean appimage install
