@@ -1,6 +1,6 @@
 [Desktop Entry]
 Type=Application
-Name=Lilyplayer
+Name=lilyplayer
 Exec=lilyplayer %F
 Icon=lilyplayer
 Comment=Plays music sheets
