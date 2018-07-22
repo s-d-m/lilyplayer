@@ -1,0 +1,28 @@
+language: cpp
+compiler: gcc
+sudo: require
+dist: trusty
+
+before_install:
+  - sudo add-apt-repository -y ppa:ubuntu-toolchain-r/test
+  - sudo add-apt-repository -y ppa:beineri/opt-qt593-trusty
+  - sudo apt-get update -qq
+
+install:
+  - sudo apt-get -y install qt59base qt59svg  g++-5 gawk sed autoconf libtool libasound2-dev
+  - sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-5 90
+  - source /opt/qt*/bin/qt*-env.sh
+
+script:
+  - git submodule update --init --recursive
+  - make appimage
+
+after_success:
+  - # curl --upload-file lilyplayer*.AppImage https://transfer.sh/lilyplayer-git.$(git rev-parse --short HEAD)-x86_64.AppImage
+  - wget -c https://github.com/probonopd/uploadtool/raw/master/upload.sh
+  - bash upload.sh ./bin/lilyplayer-*-x86_64.AppImage
+
+branches:
+  except:
+    - # Do not build tags that we create when we upload to GitHub Releases
+    - /^(?i:continuous)/

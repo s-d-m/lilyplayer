@@ -5,10 +5,10 @@ clean:
 	${MAKE} -C ./src "$@"
 	${MAKE} -C ./3rd-party/rtmidi/ "$@"
 
-install: lilyplayer
+install:
 	./make-install.sh ${DESTDIR}
 
-appimage: lilyplayer
+appimage:
 	./make-appimage.sh
 
 .PHONY: all lilyplayer clean appimage install

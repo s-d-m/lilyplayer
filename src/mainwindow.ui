@@ -26,7 +26,7 @@
    <bool>false</bool>
   </property>
   <property name="windowTitle">
-   <string>MainWindow</string>
+   <string>Lilyplayer</string>
   </property>
   <property name="styleSheet">
    <string/>
