@@ -11,9 +11,12 @@ this_dir="$(readlink -f "$(dirname "${BASH_SOURCE[0]}")")"
 
 
 tmp_dir="$(mktemp -t -d "DIR_TO_MAKE_AN_APPIMAGE_FOR_${this_app_name^^}.XXXXXX")"
+squash_fs_root_tmp_dir="$(mktemp -t -d "DIR_FOR_SQUASH_FS_ROOT.XXXXXX")"
+
 function finish()
 {
   rm -rf -- "${tmp_dir}"
+  rm -rf -- "${squash_fs_root_tmp_dir}"
 }
 
 trap finish EXIT
@@ -67,7 +70,8 @@ function add_workaround_to_increase_compat()
     cp -- "${tmp_dir}/usr/share/applications/${this_app_name}.desktop"  "${tmp_dir}/"
     cp -- "${tmp_dir}/usr/share/applications/hicolor/256x256/apps/${this_app_name}.png"  "${tmp_dir}/"
 
-    PATH="$(readlink -f "${tmp_dir}/squashfs-root/usr/bin"):${PATH}" "${tmp_dir}/squashfs-root/usr/bin/appimagetool" -g "${tmp_dir}/" "${tmp_dir}/${this_app_name}-x86_64.AppImage"
+    mv -- "${tmp_dir}/squashfs-root/" "${squash_fs_root_tmp_dir}"
+    PATH="$(readlink -f "${squash_fs_root_tmp_dir}/squashfs-root/usr/bin"):${PATH}" "${squash_fs_root_tmp_dir}/squashfs-root/usr/bin/appimagetool" -g "${tmp_dir}/" "${tmp_dir}/${this_app_name}-x86_64.AppImage"
     popd
 }
 
