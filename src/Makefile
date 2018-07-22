@@ -413,17 +413,15 @@ ifeq ($(32_BITS),1)
 endif
 
 
-all:  lilyplayer
+all:  ${TARGET}
 lilyplayer: ${TARGET}
 
-${TARGET}: ${OBJS} librtmidi
+${TARGET}: ${OBJS} ../3rd-party/rtmidi/.libs/librtmidi.so
 	-mkdir -p ${TARGET_DIR}
 	${CXX} ${CXXFLAGS} ${LDFLAGS} -o ${TARGET} ${OBJS} ${LIBS} -lstdc++
 
 ${RESOURCE_CODE}: ${QT_STYLE_FILES}
 	cd ../qdarkstyle && ${RCC} -o ../src/"$@" ${RC_FILE}
-
-librtmidi: ../3rd-party/rtmidi/.libs/librtmidi.so
 
 ../3rd-party/rtmidi/.libs/librtmidi.so:
 	cd ../3rd-party/rtmidi && \
@@ -479,7 +477,7 @@ clean:
 	       "${COVERAGE_HTML_DIR}"  "${TARGET}.info" gmon.out  "${PROFILING_OUTPUT}"
 
 
-.PHONY: all clean scan-build coverage check profiling librtmidi lilyplayer
+.PHONY: all clean scan-build coverage check profiling lilyplayer
 
 .SUFFIXES:
 
