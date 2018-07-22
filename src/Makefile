@@ -384,7 +384,8 @@ endif
 	-z relro \
 	-z nodlopen \
 	-z nodump \
-	-fuse-ld=gold
+	-fuse-ld=gold \
+	-static-libasan -static-libubsan
 endif
 
 
