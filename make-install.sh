@@ -39,6 +39,7 @@ function install()
 
     cp -- "./bin/${this_app_name}" "${dest_dir}/usr/bin"
     find ./3rd-party/rtmidi/.libs/ -name 'librtmidi.so*' -exec cp '--' '{}' "${dest_dir}/usr/lib" ';'
+    find "${dest_dir}/usr/lib" -name 'librtmidi.so*' -exec chmod -x '{}' ';'
     cp -- './misc/lilyplayer.desktop' "${dest_dir}/usr/share/applications/"
     cp -- './misc/logo_hicolor_256x256.png' "${dest_dir}/usr/share/applications/hicolor/256x256/apps/lilyplayer.png"
 }
