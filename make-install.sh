@@ -15,9 +15,15 @@ function create_dir()
 
 function install()
 {
+    if [ $# -eq 0 ] ; then
+	printf >&2 'Error install requires a destination folder. In which folder do you want %s to be installed.\n' "${this_app_name}"
+	exit 2
+    fi
+
     local readonly dest_dir="$1"
+
     if [ -z "$dest_dir" ] ; then
-	printf >&2 '%s\n' 'Error variable dest_dir is unset'
+	printf >&2 '%s\n' 'Error variable dest_dir is empty'
 	exit 2
     fi
 
