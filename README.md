@@ -5,6 +5,10 @@ Lilyplayer plays piano music sheets, as can be seen below
 
 [![Demo](./misc/lilyplayer-fake-video-screenshot.png)](./misc/lilyplayer-demo.webm "demo")
 
+For ready to use builds, you can grab the [appimage on the release page](https://github.com/s-d-m/lilyplayer/releases/tag/continuous),
+make it executable and then simply run it.
+You can also download [premade music sheets](https://github.com/s-d-m/precompiled_music_sheets_for_lilyplayer) and play them with
+lilyplayer.
 
 Build dependencies
 ----------------
