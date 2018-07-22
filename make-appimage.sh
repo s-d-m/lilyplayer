@@ -65,12 +65,14 @@ function add_workaround_to_increase_compat()
     )
 
   # Manually invoke appimagetool so that libstdc++ gets bundled and the modified AppRun stays intact
-    pushd "${tmp_dir}"
+    pushd "${squash_fs_root_tmp_dir}"
     "$linuxqtdeploy" --appimage-extract
+    popd
+
     cp -- "${tmp_dir}/usr/share/applications/${this_app_name}.desktop"  "${tmp_dir}/"
     cp -- "${tmp_dir}/usr/share/applications/hicolor/256x256/apps/${this_app_name}.png"  "${tmp_dir}/"
 
-    mv -- "${tmp_dir}/squashfs-root/" "${squash_fs_root_tmp_dir}"
+    pushd "${tmp_dir}"
     PATH="$(readlink -f "${squash_fs_root_tmp_dir}/squashfs-root/usr/bin"):${PATH}" "${squash_fs_root_tmp_dir}/squashfs-root/usr/bin/appimagetool" -g "${tmp_dir}/" "${tmp_dir}/${this_app_name}-x86_64.AppImage"
     popd
 }
