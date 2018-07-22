@@ -4,7 +4,7 @@ set +x
 
 this_app_name='lilyplayer'
 
-this_dir="$(realpath "$(dirname "${BASH_SOURCE[0]}")")"
+this_dir="$(readlink -f "$(dirname "${BASH_SOURCE[0]}")")"
 
 # too bad linuxdeployqt provides only an x86_64 AppImage, otherwise this script could also make an AppImage
 # for other architectures
@@ -39,7 +39,7 @@ function get_linuxdeployqt() {
 	fi
 
 	chmod +x  "${tmp_dir}/${app_name}"
-	realpath  "${tmp_dir}/${app_name}"
+	echo  "${tmp_dir}/${app_name}"
     fi
 }
 
