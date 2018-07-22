@@ -15,7 +15,7 @@ install:
 
 script:
   - git submodule update --init --recursive
-  - make appimage
+  - make BUILD=release appimage
 
 after_success:
   - # curl --upload-file lilyplayer*.AppImage https://transfer.sh/lilyplayer-git.$(git rev-parse --short HEAD)-x86_64.AppImage
