@@ -19,6 +19,7 @@ struct keys_rects
 {
 
 #define OCTAVE(num_octave)			       \
+    do {                                               \
   keys[note_kind::do_##num_octave - note_kind::la_0] = \
     scene.addRect(x + (qreal{2} * WHITE_KEY_WIDTH) + (qreal{num_octave - 1} * OCTAVE_WIDTH),                                y, WHITE_KEY_WIDTH, WHITE_KEY_HEIGHT); \
   keys[note_kind::do_##num_octave - note_kind::la_0]->setBrush(Qt::white); \
@@ -65,7 +66,8 @@ struct keys_rects
   \
   keys[note_kind::la_diese_##num_octave - note_kind::la_0] = \
     scene.addRect(x + (qreal{2} * WHITE_KEY_WIDTH) + (qreal{num_octave - 1} * OCTAVE_WIDTH) + (qreal{539} / qreal{4}), y, BLACK_KEY_WIDTH, BLACK_KEY_HEIGHT); \
-  keys[note_kind::la_diese_##num_octave - note_kind::la_0]->setBrush(Qt::black);
+  keys[note_kind::la_diese_##num_octave - note_kind::la_0]->setBrush(Qt::black); \
+  } while (0)
 
     keys_rects(QGraphicsScene& scene, const qreal x = 0, const qreal y = 0)
     {
